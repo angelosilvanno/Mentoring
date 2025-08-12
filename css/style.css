@@ -235,7 +235,6 @@ a:hover {
     padding: 0.4em 0.8em;
 }
 
-/* --- NOVOS ESTILOS PARA ROLAGEM HORIZONTAL --- */
 .horizontal-scroll-container {
   display: flex;
   overflow-x: auto;
