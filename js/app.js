@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const editAppointmentModal = new bootstrap.Modal(document.getElementById('editAppointmentModal'));
     const editAppointmentForm = document.getElementById('form-edit-appointment');
     
-    // --- COMPONENTES DE FEEDBACK ---
     const toastElement = document.getElementById('appToast');
     const appToast = new bootstrap.Toast(toastElement, { delay: 4000 });
     const confirmModalElement = document.getElementById('confirmModal');
@@ -199,8 +198,6 @@ document.addEventListener('DOMContentLoaded', function () {
         renderAdminDashboard();
     }
 
-    // --- LÓGICA DA PÁGINA DE DESCOBERTA (ENCONTRAR MENTOR) ---
-
     function buildMentorCard(mentor, isHorizontal = false) {
         const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
         const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
@@ -256,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return { ...mentor, averageRating, ratingCount: allRatings.length };
             })
             .filter(mentor => mentor.ratingCount > 0)
-            .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount) // Ordena por nota, depois por n. de avaliações
+            .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount)
             .slice(0, 3);
 
         if(mentorsWithRatings.length > 0) {
@@ -267,17 +264,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderMentorList(filter = '') {
+        const lowercasedFilter = filter.trim().toLowerCase();
+
+        if (!lowercasedFilter) {
+            mentorsListContainer.innerHTML = `<div class="col-12 text-center p-5 text-muted">
+                <i class="bi bi-keyboard fs-1"></i>
+                <h5 class="mt-3">Comece a digitar para buscar</h5>
+                <p>Use o campo acima para encontrar mentores por nome ou habilidade.</p>
+            </div>`;
+            return;
+        }
+
         const mentors = users.filter(user => user.role === 'mentor');
-        const lowercasedFilter = filter.toLowerCase();
-        const filteredMentors = filter ? mentors.filter(mentor =>
+        const filteredMentors = mentors.filter(mentor =>
             mentor.name.toLowerCase().includes(lowercasedFilter) ||
             mentor.skills.some(skill => skill.toLowerCase().includes(lowercasedFilter))
-        ) : mentors;
+        );
 
         mentorsListContainer.innerHTML = '';
 
         if (filteredMentors.length === 0) {
-            mentorsListContainer.innerHTML = `<div class="col-12 text-center p-5"><i class="bi bi-search fs-1 text-muted"></i><h5 class="mt-3">Nenhum mentor encontrado</h5><p class="text-muted">Tente ajustar seus termos de busca.</p></div>`;
+            mentorsListContainer.innerHTML = `<div class="col-12 text-center p-5 text-muted">
+                <i class="bi bi-emoji-frown fs-1"></i>
+                <h5 class="mt-3">Nenhum mentor encontrado</h5>
+                <p>Tente ajustar seus termos de busca.</p>
+            </div>`;
             return;
         }
 
@@ -312,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderRecommendedMentors();
         renderFeaturedMentors();
         renderPopularTags();
-        renderMentorList(); // Renderiza a lista completa inicialmente
+        renderMentorList(); 
     }
     
     function renderAdminDashboard() {
