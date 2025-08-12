@@ -100,7 +100,6 @@
                     </div>
                 </div>
 
-                <!-- NOVA ESTRUTURA DE ABAS -->
                 <ul class="nav nav-tabs nav-fill mb-4" id="discovery-tabs" role="tablist">
                   <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="recommended-tab" data-bs-toggle="tab" data-bs-target="#recommended-tab-pane" type="button" role="tab">Recomendados</button>
@@ -114,19 +113,14 @@
                 </ul>
 
                 <div class="tab-content" id="discovery-tabs-content">
-                  <!-- Painel de Recomendados -->
                   <div class="tab-pane fade show active" id="recommended-tab-pane" role="tabpanel">
                     <div id="recommended-mentors-container" class="row g-3">
-                      <!-- Cards de mentores recomendados -->
                     </div>
                   </div>
-                  <!-- Painel de Destaques -->
                   <div class="tab-pane fade" id="featured-tab-pane" role="tabpanel">
                     <div id="featured-mentors-container" class="row g-3">
-                      <!-- Cards de mentores em destaque -->
                     </div>
                   </div>
-                  <!-- Painel de Busca Geral -->
                   <div class="tab-pane fade" id="all-mentors-tab-pane" role="tabpanel">
                     <div class="mb-4">
                         <h4 class="fs-6 fw-semibold">Busque por categorias populares:</h4>
@@ -155,9 +149,24 @@
                           <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-mentees">0</h4><p class="text-muted mb-0">Mentees Atendidos</p></div></div></div>
                           <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h5" id="mentor-stats-next">Nenhum</h4><p class="text-muted mb-0">Próximo Encontro</p></div></div></div>
                         </div>
-                        <div id="upcoming-appointments"><h3 class="fs-6 fw-semibold mb-3">Próximos Encontros</h3><div id="upcoming-appointments-list"></div></div>
-                        <hr class="my-4">
-                        <div id="past-appointments"><h3 class="fs-6 fw-semibold mb-3">Encontros Realizados</h3><div id="past-appointments-list"></div></div>
+
+                        <!-- NOVA ESTRUTURA DE ABAS PARA AGENDAMENTOS DO MENTOR -->
+                        <ul class="nav nav-tabs nav-fill mb-3" id="appointments-tabs" role="tablist">
+                          <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-tab-pane" type="button" role="tab">Próximos Encontros</button>
+                          </li>
+                          <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-tab-pane" type="button" role="tab">Histórico</button>
+                          </li>
+                        </ul>
+                        <div class="tab-content" id="appointments-tabs-content">
+                          <div class="tab-pane fade show active" id="upcoming-tab-pane" role="tabpanel">
+                            <div id="upcoming-appointments-list"></div>
+                          </div>
+                          <div class="tab-pane fade" id="past-tab-pane" role="tabpanel">
+                            <div id="past-appointments-list"></div>
+                          </div>
+                        </div>
                     </div>
                     <div id="calendar-container" class="d-none"></div>
                 </div>
