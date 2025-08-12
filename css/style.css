@@ -239,11 +239,10 @@ a:hover {
 .horizontal-scroll-container {
   display: flex;
   overflow-x: auto;
-  padding-bottom: 1rem; /* Espaço para a barra de rolagem */
-  gap: 1rem; /* Espaçamento entre os cards */
+  padding-bottom: 1rem; 
+  gap: 1rem; 
 }
 
-/* Estilo da barra de rolagem para navegadores Webkit (Chrome, Safari) */
 .horizontal-scroll-container::-webkit-scrollbar {
   height: 8px;
 }
