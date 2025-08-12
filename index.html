@@ -96,39 +96,51 @@
                 <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
                     <i class="bi bi-info-circle-fill me-3 fs-4"></i>
                     <div>
-                      Bem-vindo(a)! Explore os mentores recomendados ou utilize a busca para encontrar a ajuda que precisa.
+                      Bem-vindo(a)! Navegue pelas abas para encontrar mentores recomendados, em destaque ou busque em nossa comunidade.
                     </div>
                 </div>
 
-                <div id="recommended-mentors-section" class="mb-5">
-                  <h3 class="fs-5 fw-bold mb-3">Recomendados para Você</h3>
-                  <div id="recommended-mentors-container" class="horizontal-scroll-container">
+                <!-- NOVA ESTRUTURA DE ABAS -->
+                <ul class="nav nav-tabs nav-fill mb-4" id="discovery-tabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="recommended-tab" data-bs-toggle="tab" data-bs-target="#recommended-tab-pane" type="button" role="tab">Recomendados</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="featured-tab" data-bs-toggle="tab" data-bs-target="#featured-tab-pane" type="button" role="tab">Destaque</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="all-mentors-tab" data-bs-toggle="tab" data-bs-target="#all-mentors-tab-pane" type="button" role="tab">Buscar Todos</button>
+                  </li>
+                </ul>
+
+                <div class="tab-content" id="discovery-tabs-content">
+                  <!-- Painel de Recomendados -->
+                  <div class="tab-pane fade show active" id="recommended-tab-pane" role="tabpanel">
+                    <div id="recommended-mentors-container" class="row g-3">
+                      <!-- Cards de mentores recomendados -->
+                    </div>
+                  </div>
+                  <!-- Painel de Destaques -->
+                  <div class="tab-pane fade" id="featured-tab-pane" role="tabpanel">
+                    <div id="featured-mentors-container" class="row g-3">
+                      <!-- Cards de mentores em destaque -->
+                    </div>
+                  </div>
+                  <!-- Painel de Busca Geral -->
+                  <div class="tab-pane fade" id="all-mentors-tab-pane" role="tabpanel">
+                    <div class="mb-4">
+                        <h4 class="fs-6 fw-semibold">Busque por categorias populares:</h4>
+                        <div id="popular-tags-container"></div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="position-relative">
+                          <i class="bi bi-search fs-5 text-muted position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                          <input type="search" id="search-mentor-input" class="form-control form-control-lg ps-5" placeholder="Buscar por nome ou disciplina...">
+                        </div>
+                    </div>
+                    <div id="mentors-list-container" class="row g-3"></div>
                   </div>
                 </div>
-
-                <div id="featured-mentors-section" class="mb-5">
-                  <h3 class="fs-5 fw-bold mb-3">Mentores em Destaque</h3>
-                  <div id="featured-mentors-container" class="row g-3">
-                  </div>
-                </div>
-                
-                <hr class="my-4">
-
-                <div id="all-mentors-section">
-                  <h3 class="fs-5 fw-bold mb-3">Todos os Mentores</h3>
-                  <div class="mb-4">
-                      <h4 class="fs-6 fw-semibold">Busque por categorias populares:</h4>
-                      <div id="popular-tags-container"></div>
-                  </div>
-                  <div class="mb-4">
-                      <div class="position-relative">
-                        <i class="bi bi-search fs-5 text-muted position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                        <input type="search" id="search-mentor-input" class="form-control form-control-lg ps-5" placeholder="Buscar por nome ou disciplina...">
-                      </div>
-                  </div>
-                  <div id="mentors-list-container" class="row g-3"></div>
-                </div>
-
               </div>
             </div>
           </section>
@@ -138,35 +150,11 @@
                 <div class="card-header"><h2 class="fs-5 mb-0">Meus Agendamentos</h2></div>
                 <div class="card-body" id="agendamento-card-body">
                     <div id="mentor-appointment-view">
-                        <!-- NOVO PAINEL DE ESTATÍSTICAS -->
                         <div class="row g-3 mb-4" id="mentor-stats-panel">
-                          <div class="col-md-4">
-                            <div class="card text-center h-100">
-                              <div class="card-body">
-                                <h4 class="h1" id="mentor-stats-total">0</h4>
-                                <p class="text-muted mb-0">Encontros Realizados</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-4">
-                            <div class="card text-center h-100">
-                              <div class="card-body">
-                                <h4 class="h1" id="mentor-stats-mentees">0</h4>
-                                <p class="text-muted mb-0">Mentees Atendidos</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-4">
-                            <div class="card text-center h-100">
-                              <div class="card-body">
-                                <h4 class="h5" id="mentor-stats-next">Nenhum</h4>
-                                <p class="text-muted mb-0">Próximo Encontro</p>
-                              </div>
-                            </div>
-                          </div>
+                          <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-total">0</h4><p class="text-muted mb-0">Encontros Realizados</p></div></div></div>
+                          <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-mentees">0</h4><p class="text-muted mb-0">Mentees Atendidos</p></div></div></div>
+                          <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h5" id="mentor-stats-next">Nenhum</h4><p class="text-muted mb-0">Próximo Encontro</p></div></div></div>
                         </div>
-
-                        <!-- LISTAS DE AGENDAMENTOS -->
                         <div id="upcoming-appointments"><h3 class="fs-6 fw-semibold mb-3">Próximos Encontros</h3><div id="upcoming-appointments-list"></div></div>
                         <hr class="my-4">
                         <div id="past-appointments"><h3 class="fs-6 fw-semibold mb-3">Encontros Realizados</h3><div id="past-appointments-list"></div></div>
