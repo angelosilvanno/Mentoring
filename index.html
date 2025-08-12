@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plataforma Mentoring</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/calendar.css"> 
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+</head>
+<body>
+  <div id="auth-wrapper" class="d-flex align-items-center justify-content-center p-3">
+    <div class="card login-card shadow-lg col-xl-5 col-lg-6 col-md-8 col-sm-11 col-11">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <h1 class="h2 fw-bold">Mentoring</h1>
+          <p class="text-muted">Conecte-se, aprenda e cresça com nossa comunidade.</p>
+        </div>
+        
+        <div id="login-container">
+          <form id="form-login" class="d-grid gap-3">
+            <input type="email" class="form-control form-control-lg" placeholder="Email" required/>
+            <input type="password" class="form-control form-control-lg" placeholder="Senha" required/>
+            <button type="submit" class="btn btn-primary btn-lg fw-bold">Entrar</button>
+          </form>
+          <div class="text-center my-3">
+            <a href="#" class="text-decoration-none small">Esqueceu a senha?</a>
+          </div>
+          <hr>
+          <div class="text-center">
+            <button id="btn-show-register-form" class="btn btn-secondary btn-lg fw-bold px-4">Criar nova conta</button>
+          </div>
+        </div>
+
+        <section id="cadastro-section" class="mt-4 d-none">
+          <h2 class="fs-4 text-center fw-bold mb-3">Crie sua Conta</h2>
+          <form id="form-cadastro" class="row g-2">
+            <div class="col-12"><input type="text" name="fullName" class="form-control" placeholder="Nome Completo" required /></div>
+            <div class="col-12"><input type="text" name="username" class="form-control" placeholder="Nome de Usuário" required /></div>
+            <div class="col-12"><input type="email" name="email" class="form-control" placeholder="E-mail" required /></div>
+            <div class="col-12"><input type="password" name="password" class="form-control" placeholder="Senha (mín. 6 caracteres)" required minlength="6"/></div>
+            <div class="col-12"><select class="form-select" name="course" required>
+              <option disabled selected value="">Seu curso</option>
+              <option value="BTI">Bacharelado em Tecnologia da Informação</option>
+              <option value="BCIT">Bacharelado em Ciência e Tecnologia</option>
+              <option value="ES">Engenharia de Software</option>
+              <option value="ADS">Análise e Desenvolvimento de Sistemas</option>
+              <option value="EC">Engenharia da Computação</option>
+              <option value="Outro">Outro</option></select></div>
+            <div class="col-6"><select class="form-select" name="role" required>
+              <option disabled selected value="">Tipo de Conta</option>
+              <option value="mentee">Mentee</option>
+              <option value="mentor">Mentor</option>
+              <option value="admin" id="admin-register-option" hidden>Administrador(a)</option></select>
+            </div>
+            <div class="col-6"><select class="form-select" name="gender" required>
+              <option disabled selected value="">Gênero</option>
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+              <option value="outro">Prefiro não informar</option></select></div>
+            <div class="col-12"><button type="submit" class="btn btn-primary fw-bold w-100">Cadastrar</button></div>
+          </form>
+          <p class="small text-center text-muted mt-3">Já tem uma conta? <button id="btn-show-login-form" class="btn btn-link p-0 fw-semibold">Faça Login</button></p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-wrapper" class="d-none">
+    <aside id="app-sidebar">
+      <div class="sidebar-profile"><img id="sidebar-avatar" src="" class="rounded-circle" alt="Avatar do Usuário"><div class="sidebar-user-info"><span id="sidebar-username"></span><button id="btn-edit-profile" class="btn btn-sm btn-link p-0">Editar perfil</button></div></div>
+      <ul class="nav flex-column sidebar-nav">
+        <li class="nav-item" id="nav-buscar-mentores"><a href="#" class="nav-link" data-view="buscar-mentores-section">
+          <i class="bi bi-search"></i> Buscar Mentores</a></li>
+        <li class="nav-item" id="nav-agendamentos"><a href="#" class="nav-link" data-view="agendamento-section">
+          <i class="bi bi-calendar-check"></i> Agendamentos</a></li>
+        <li class="nav-item" id="nav-mensagens"><a href="#" class="nav-link" data-view="mensagem-section">
+          <i class="bi bi-chat-left-text"></i> Mensagens</a></li>
+        <li class="nav-item" id="nav-forum"><a href="#" class="nav-link" data-view="forum-section">
+          <i class="bi bi-people"></i> Fórum</a></li>
+        <li class="nav-item d-none" id="nav-admin"><a href="#" class="nav-link" data-view="admin-panel">
+          <i class="bi bi-sliders"></i> Administração</a></li>
+      </ul>
+      <div class="sidebar-footer mt-auto"><button id="btn-logout" class="btn btn-outline-secondary w-100">Sair</button></div>
+    </aside>
+
+    <main id="app-main-content" class="flex-grow-1 p-4">
+        <div id="user-content" class="row g-4 h-100">
+          <section id="buscar-mentores-section" class="content-view col-12 d-none">
+            <div class="card h-100">
+              <div class="card-header"><h2 class="fs-5 mb-0">Encontrar um Mentor</h2></div>
+              <div class="card-body">
+                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                    <div>
+                      Bem-vindo(a)! Explore os mentores recomendados ou utilize a busca para encontrar a ajuda que precisa.
+                    </div>
+                </div>
+
+                <div id="recommended-mentors-section" class="mb-5">
+                  <h3 class="fs-5 fw-bold mb-3">Recomendados para Você</h3>
+                  <div id="recommended-mentors-container" class="horizontal-scroll-container">
+                  </div>
+                </div>
+
+                <div id="featured-mentors-section" class="mb-5">
+                  <h3 class="fs-5 fw-bold mb-3">Mentores em Destaque</h3>
+                  <div id="featured-mentors-container" class="row g-3">
+                  </div>
+                </div>
+                
+                <hr class="my-4">
+
+                <div id="all-mentors-section">
+                  <h3 class="fs-5 fw-bold mb-3">Todos os Mentores</h3>
+                  <div class="mb-4">
+                      <h4 class="fs-6 fw-semibold">Busque por categorias populares:</h4>
+                      <div id="popular-tags-container"></div>
+                  </div>
+                  <div class="mb-4">
+                      <div class="position-relative">
+                        <i class="bi bi-search fs-5 text-muted position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                        <input type="search" id="search-mentor-input" class="form-control form-control-lg ps-5" placeholder="Buscar por nome ou disciplina...">
+                      </div>
+                  </div>
+                  <div id="mentors-list-container" class="row g-3"></div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          <section id="agendamento-section" class="content-view col-md-12 d-none">
+            <div class="card h-100">
+                <div class="card-header"><h2 class="fs-5 mb-0">Meus Agendamentos</h2></div>
+                <div class="card-body" id="agendamento-card-body">
+                    <div id="mentor-appointment-view">
+                        <!-- NOVO PAINEL DE ESTATÍSTICAS -->
+                        <div class="row g-3 mb-4" id="mentor-stats-panel">
+                          <div class="col-md-4">
+                            <div class="card text-center h-100">
+                              <div class="card-body">
+                                <h4 class="h1" id="mentor-stats-total">0</h4>
+                                <p class="text-muted mb-0">Encontros Realizados</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="card text-center h-100">
+                              <div class="card-body">
+                                <h4 class="h1" id="mentor-stats-mentees">0</h4>
+                                <p class="text-muted mb-0">Mentees Atendidos</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="card text-center h-100">
+                              <div class="card-body">
+                                <h4 class="h5" id="mentor-stats-next">Nenhum</h4>
+                                <p class="text-muted mb-0">Próximo Encontro</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- LISTAS DE AGENDAMENTOS -->
+                        <div id="upcoming-appointments"><h3 class="fs-6 fw-semibold mb-3">Próximos Encontros</h3><div id="upcoming-appointments-list"></div></div>
+                        <hr class="my-4">
+                        <div id="past-appointments"><h3 class="fs-6 fw-semibold mb-3">Encontros Realizados</h3><div id="past-appointments-list"></div></div>
+                    </div>
+                    <div id="calendar-container" class="d-none"></div>
+                </div>
+            </div>
+          </section>
+
+          <section id="mensagem-section" class="content-view col-12 d-none">
+            <div class="card h-100"><div class="card-header"><h2 class="fs-5 mb-0">Minhas Mensagens</h2></div><div class="card-body p-0" id="conversations-container"><ul class="list-group list-group-flush" id="conversations-list-ul"><li class="list-group-item text-muted text-center p-4">Nenhuma conversa iniciada.</li></ul></div></div></section>
+          <section id="forum-section" class="content-view col-12 d-none"><div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2 class="fs-5 mb-0">Fórum da Comunidade</h2><button class="btn btn-primary btn-sm" id="btn-create-topic">
+                <i class="bi bi-plus-circle"></i> Criar Tópico</button></div><div class="card-body" id="forum-card-body"><div class="list-group"></div></div></div></section>
+          <section id="admin-panel" class="content-view col-12 d-none"><div class="row g-4"><div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title" id="total-users-stat">0</h5><p class="card-text text-muted">Total de Usuários</p></div></div></div><div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title" id="total-mentors-stat">0</h5><p class="card-text text-muted">Mentores</p></div></div></div><div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title" id="total-mentees-stat">0</h5><p class="card-text text-muted">Mentees</p></div></div></div></div><div class="card mt-4"><div class="card-header d-flex justify-content-between align-items-center"><h2 class="fs-5 mb-0">Gerenciamento de Usuários</h2><button class="btn btn-primary btn-sm" id="btn-add-user"><i class="bi bi-plus-circle"></i> Adicionar Usuário</button></div><div class="card-body" id="user-list-container"><ul id="users-list-ul" class="list-group list-group-flush"></ul></div></div></section>
+        </div>
+    </main>
+  </div>
+
+  <div class="modal fade" id="editProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5">Editar Perfil</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-edit-profile"><div class="mb-3"><label for="edit-name" class="form-label">Nome Completo</label><input type="text" id="edit-name" class="form-control" required></div><div class="mb-3"><label for="edit-bio" class="form-label">Sobre (visível para os mentees)</label><textarea id="edit-bio" class="form-control" rows="3" placeholder="Fale um pouco sobre você, suas experiências e áreas que pode ajudar."></textarea></div><div class="mb-3"><label for="edit-skills" class="form-label">Habilidades e Disciplinas</label><input type="text" id="edit-skills" class="form-control" placeholder="Ex: Cálculo I, Python, Liderança de Equipes"></div><div class="mb-3"><label for="edit-availability" class="form-label">Horários Disponíveis</label><textarea id="edit-availability" class="form-control" rows="3" placeholder="Ex:
+Segundas: 18h - 19h
+Quartas: 14h - 16h"></textarea></div>
+<div class="modal-footer px-0 pb-0">
+  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+  <button type="submit" class="btn btn-primary">Salvar Alterações</button></div></form></div></div></div></div>
+  <div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header">
+    <h1 class="modal-title fs-5">Adicionar Novo Usuário</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-add-user" class="row g-3">
+    <div class="col-12"><input type="text" name="fullName" class="form-control" placeholder="Nome Completo" required /></div><div class="col-12"><input type="email" name="email" class="form-control" placeholder="E-mail" required /></div>
+    <div class="col-12"><input type="password" name="password" class="form-control" placeholder="Senha Temporária" required /></div><div class="col-md-6"><select class="form-select" name="course" required>
+      <option disabled selected value="">Curso </option>
+      <option value="BTI">BTI</option><option value="ES">Eng. Software</option>
+      <option value="Outro">Outro</option></select></div><div class="col-md-6">
+      <select class="form-select" name="role" required>
+        <option disabled selected value="">-- Papel --</option>
+        <option value="mentor">Aluno(a) Veterano(a)</option>
+        <option value="mentee">Aluno(a) Novato(a)</option>
+      </select>
+    </div>
+    <div class="col-md-12">
+      <select class="form-select" name="gender" required><option disabled selected value="">-- Gênero --</option>
+        <option value="masculino">Masculino</option>
+        <option value="feminino">Feminino</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="col-12">
+      <input type="text" name="skills" class="form-control" placeholder="Habilidades (separadas por vírgula)" />
+    </div>
+    <div class="col-12 d-flex justify-content-end">
+      <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Adicionar Usuário</button>
+    </div></form></div></div></div></div>
+  <div class="modal fade" id="viewProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0"><h1 class="modal-title fs-5">Mentor</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body text-center">
+                <img id="modal-profile-avatar" src="" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar do Mentor">
+                <h2 id="modal-profile-name" class="fs-4"></h2>
+                <div id="modal-profile-rating" class="mb-2"></div>
+                <p id="modal-profile-course" class="text-muted"></p>
+                <hr>
+                <div class="text-start">
+                    <p class="mt-3"><strong><i class="bi bi-info-circle-fill text-info me-2"></i>Sobre:</strong><span id="modal-profile-bio" class="text-muted d-block mt-1">Este mentor ainda não adicionou uma biografia.</span></p>
+                    <strong><i class="bi bi-star-fill text-warning me-2"></i>Habilidades:</strong><div id="modal-profile-skills" class="mt-2 mb-3"></div>
+                    <strong><i class="bi bi-person-video3 text-primary me-2"></i>Encontros Realizados:</strong>
+                    <ul id="modal-mentor-history-list" class="list-group list-group-flush mt-2" style="max-height: 150px; overflow-y: auto;">
+                        <li class="list-group-item small text-muted">Carregando histórico...</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center"><button type="button" class="btn btn-outline-primary" id="btn-send-message-from-profile"><i class="bi bi-chat-dots me-2"></i>Enviar Mensagem</button><button type="button" class="btn btn-primary" id="btn-request-mentorship"><i class="bi bi-calendar-plus me-2"></i>Agendar Encontro</button></div>
+        </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="composeMessageModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="composeMessageModalLabel">Enviar Nova Mensagem</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-compose-message"><input type="hidden" id="message-recipient-id"><div class="mb-3"><label for="message-recipient-name" class="form-label">Para:</label><input type="text" id="message-recipient-name" class="form-control" disabled></div><div class="mb-3"><label for="message-subject" class="form-label">Assunto:</label><input type="text" id="message-subject" class="form-control" required></div><div class="mb-3"><label for="message-body" class="form-label">Mensagem:</label><textarea id="message-body" class="form-control" rows="5" required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Enviar</button></div></form></div></div></div></div>
+  <div class="modal fade" id="viewConversationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="viewConversationModalLabel">Conversa com...</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="conversation-thread-body" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><form id="form-reply-message" class="w-100"><div class="input-group"><textarea id="reply-message-body" class="form-control" placeholder="Escreva sua resposta..." rows="2" required></textarea><button type="submit" class="btn btn-primary">Responder</button></div></form></div></div></div></div>
+  <div class="modal fade" id="requestMentorshipModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="requestMentorshipModalLabel">Solicitar Encontro</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-request-mentorship"><input type="hidden" id="mentorship-mentor-id"><div class="mb-3"><label for="mentorship-date" class="form-label">Data do Encontro</label><input type="date" id="mentorship-date" class="form-control" required></div><div class="mb-3"><label for="mentorship-time" class="form-label">Horário</label><input type="time" id="mentorship-time" class="form-control" required></div><div class="mb-3"><label for="mentorship-topic" class="form-label">Tópico Principal</label><textarea id="mentorship-topic" class="form-control" rows="3" placeholder="Sobre o que você gostaria de conversar? (ex: Ajuda com Cálculo I, Dicas de Carreira)" required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Enviar Solicitação</button></div></form></div></div></div></div>
+  <div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="feedbackModalLabel">Avaliar Encontro</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><form id="form-send-feedback"><input type="hidden" id="feedback-appointment-id">
+          <div class="mb-3 text-center">
+            <label class="form-label">Sua avaliação para <span id="feedback-mentor-name" class="fw-bold"></span></label>
+            <div id="feedback-stars" class="fs-2" style="cursor: pointer;"><i class="bi bi-star text-secondary"></i>
+              <i class="bi bi-star text-secondary"></i><i class="bi bi-star text-secondary"></i><i class="bi bi-star text-secondary"></i>
+              <i class="bi bi-star text-secondary"></i></div>
+            </div>
+            <div class="mb-3"><label for="feedback-comment" class="form-label">Comentário</label>
+              <textarea id="feedback-comment" class="form-control" rows="4" placeholder="Como foi sua experiência?"></textarea>
+            </div>
+            <div class="modal-footer px-0 pb-0">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
+            </div></form></div></div></div></div>
+  <div class="modal fade" id="createTopicModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content"><div class="modal-header">
+      <h1 class="modal-title fs-5" id="createTopicModalLabel">Criar Novo Tópico</h1>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><form id="form-create-topic"><div class="mb-3">
+        <label for="topic-title" class="form-label">Título do Tópico</label>
+        <input type="text" id="topic-title" class="form-control" required></div>
+        <div class="mb-3"><label for="topic-body" class="form-label">Sua Mensagem</label>
+          <textarea id="topic-body" class="form-control" rows="5" placeholder="Inicie a discussão..." required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Publicar Tópico</button></div></form></div></div></div></div>
+  <div class="modal fade" id="viewTopicModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="view-topic-title"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;" id="topic-replies-container"></div>
+            <div class="modal-footer">
+                <form id="form-reply-topic" class="w-100">
+                    <div class="mb-2">
+                        <textarea id="reply-topic-body" class="form-control" placeholder="Escreva sua resposta..." rows="2" required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-primary" type="submit">Publicar Resposta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade" id="editAppointmentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="editAppointmentModalLabel">Editar Encontro</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-appointment">
+                    <input type="hidden" id="edit-appointment-id">
+                    <div class="mb-3">
+                        <label for="edit-appointment-date" class="form-label">Nova Data do Encontro</label>
+                        <input type="date" id="edit-appointment-date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-appointment-time" class="form-label">Novo Horário</label>
+                        <input type="time" id="edit-appointment-time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-appointment-topic" class="form-label">Novo Tópico Principal</label>
+                        <textarea id="edit-appointment-topic" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="edit-notify-mentee">
+                        <label class="form-check-label" for="edit-notify-mentee">Notificar mentorado sobre a alteração</label>
+                    </div>
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+  </div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+  <div id="appToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <i id="toastIcon" class="bi me-2"></i>
+      <strong class="me-auto" id="toastTitle">Notificação</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Fechar"></button>
+    </div>
+    <div class="toast-body" id="toastBody">
+      Mensagem aqui.
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Confirmar Ação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">
+        Você tem certeza que deseja realizar esta ação?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="confirmModalCancelBtn" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmModalConfirmBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infoModalLabel">Detalhes do Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="infoModalBody">
+                Conteúdo informativo aqui.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

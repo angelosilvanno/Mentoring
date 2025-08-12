@@ -1,0 +1,51 @@
+#calendar-container {
+    height: 70vh;
+    min-height: 500px;
+    max-height: 700px;
+    width: 100%;
+    position: relative;
+    overflow-y: auto; 
+}
+
+#calendar-container .fc {
+    height: 100%;
+    width: 100%;
+}
+
+#calendar-container .fc-toolbar-title {
+    font-size: 1.25rem;
+}
+
+#calendar-container .fc-daygrid-day-number {
+    font-size: 0.9em;
+    padding: 4px;
+}
+
+#calendar-container .fc-event-title {
+    font-weight: 500;
+}
+
+/*
+ * Media Query (Celulares).
+*/
+@media (max-width: 768px) {
+    #calendar-container {
+        height: auto;
+        min-height: 450px;
+    }
+
+    #calendar-container .fc-toolbar {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    #calendar-container .fc-toolbar-title {
+        font-size: 1.1rem;
+    }
+
+    #calendar-container .fc-daygrid-day-number {
+        font-size: 0.8em;
+    }
+}
