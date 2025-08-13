@@ -198,6 +198,85 @@ document.addEventListener('DOMContentLoaded', function () {
         renderAdminDashboard();
     }
 
+    function buildMentorCard(mentor) {
+        const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
+        const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
+        const ratingHTML = averageRating > 0 ?
+            `<div class="d-flex align-items-center justify-content-center small text-muted mb-2">
+                <i class="bi bi-star-fill text-warning me-1"></i>
+                <span>${averageRating} (${allRatings.length})</span>
+            </div>` :
+            '<div class="small text-muted mb-2">Ainda não avaliado</div>';
+
+        const skillBadges = mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('');
+        
+        return `
+            <div class="col-md-6 col-lg-4">
+                <div class="card mentor-card h-100 shadow-sm text-center">
+                    <div class="card-body d-flex flex-column">
+                        <img src="${getAvatarUrl(mentor)}" class="rounded-circle mb-3 mx-auto" style="width: 90px; height: 90px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
+                        <h5 class="card-title mb-1">${mentor.name}</h5>
+                        <p class="card-text text-muted small">${mentor.course}</p>
+                        ${ratingHTML}
+                        <div class="my-3 flex-grow-1">
+                            ${skillBadges || '<p class="small text-muted">Nenhuma habilidade informada.</p>'}
+                        </div>
+                        <button class="btn btn-primary mt-auto btn-view-profile" data-id="${mentor.id}">Ver Perfil</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderRecommendedMentors() {
+        const container = document.getElementById('recommended-mentors-container');
+        container.innerHTML = '';
+        const recommended = users.filter(user => 
+            user.role === 'mentor' && 
+            user.course === currentUser.course && 
+            user.id !== currentUser.id
+        );
+
+        if (recommended.length > 0) {
+            recommended.forEach(mentor => container.innerHTML += buildMentorCard(mentor));
+        } else {
+            container.innerHTML = `
+                <div class="col-12 text-center p-5 text-muted">
+                    <i class="bi bi-compass fs-1"></i>
+                    <h5 class="mt-3">Nenhum mentor recomendado do seu curso</h5>
+                    <p>Ainda não há mentores do curso de ${currentUser.course}. Que tal explorar os mentores em destaque ou buscar em toda a comunidade?</p>
+                </div>
+            `;
+        }
+    }
+    
+    function renderFeaturedMentors() {
+        const container = document.getElementById('featured-mentors-container');
+        container.innerHTML = '';
+        const mentorsWithRatings = users
+            .filter(user => user.role === 'mentor')
+            .map(mentor => {
+                const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback?.rating).map(a => a.feedback.rating);
+                const averageRating = allRatings.length > 0 ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 0;
+                return { ...mentor, averageRating, ratingCount: allRatings.length };
+            })
+            .filter(mentor => mentor.ratingCount > 0)
+            .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount)
+            .slice(0, 3);
+
+        if (mentorsWithRatings.length > 0) {
+            mentorsWithRatings.forEach(mentor => container.innerHTML += buildMentorCard(mentor));
+        } else {
+            container.innerHTML = `
+                <div class="col-12 text-center p-5 text-muted">
+                    <i class="bi bi-star fs-1"></i>
+                    <h5 class="mt-3">Ainda não há mentores em destaque</h5>
+                    <p>Os mentores mais bem avaliados pela comunidade aparecerão aqui assim que receberem feedback.</p>
+                </div>
+            `;
+        }
+    }
+
     function renderMentorList(filter = '') {
         const lowercasedFilter = filter.trim().toLowerCase();
 
