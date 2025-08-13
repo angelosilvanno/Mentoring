@@ -198,71 +198,6 @@ document.addEventListener('DOMContentLoaded', function () {
         renderAdminDashboard();
     }
 
-    function buildMentorCard(mentor, isHorizontal = false) {
-        const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
-        const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
-        const ratingHTML = averageRating > 0 ?
-            `<div class="d-flex align-items-center justify-content-center small text-muted mb-2">
-                <i class="bi bi-star-fill text-warning me-1"></i>
-                <span>${averageRating} (${allRatings.length})</span>
-            </div>` :
-            '<div class="small text-muted mb-2">Ainda não avaliado</div>';
-
-        const skillBadges = mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('');
-        
-        const cardClass = isHorizontal ? 'mentor-card-horizontal' : 'col-md-6 col-lg-4';
-        const cardStructure = `
-            <div class="${cardClass}">
-                <div class="card mentor-card h-100 shadow-sm text-center">
-                    <div class="card-body d-flex flex-column">
-                        <img src="${getAvatarUrl(mentor)}" class="rounded-circle mb-3 mx-auto" style="width: 90px; height: 90px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
-                        <h5 class="card-title mb-1">${mentor.name}</h5>
-                        <p class="card-text text-muted small">${mentor.course}</p>
-                        ${ratingHTML}
-                        <div class="my-3 flex-grow-1">
-                            ${skillBadges || '<p class="small text-muted">Nenhuma habilidade informada.</p>'}
-                        </div>
-                        <button class="btn btn-primary mt-auto btn-view-profile" data-id="${mentor.id}">Ver Perfil</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        return cardStructure;
-    }
-
-    function renderRecommendedMentors() {
-        const container = document.getElementById('recommended-mentors-container');
-        container.innerHTML = '';
-        const recommended = users.filter(user => user.role === 'mentor' && user.course === currentUser.course && user.id !== currentUser.id).slice(0, 5);
-        
-        if(recommended.length > 0) {
-            recommended.forEach(mentor => container.innerHTML += buildMentorCard(mentor, true));
-        } else {
-            container.innerHTML = '<p class="text-muted">Não encontramos mentores do seu curso no momento.</p>';
-        }
-    }
-    
-    function renderFeaturedMentors() {
-        const container = document.getElementById('featured-mentors-container');
-        container.innerHTML = '';
-        const mentorsWithRatings = users
-            .filter(user => user.role === 'mentor')
-            .map(mentor => {
-                const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback?.rating).map(a => a.feedback.rating);
-                const averageRating = allRatings.length > 0 ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 0;
-                return { ...mentor, averageRating, ratingCount: allRatings.length };
-            })
-            .filter(mentor => mentor.ratingCount > 0)
-            .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount)
-            .slice(0, 3);
-
-        if(mentorsWithRatings.length > 0) {
-            mentorsWithRatings.forEach(mentor => container.innerHTML += buildMentorCard(mentor, false));
-        } else {
-            container.innerHTML = '<div class="col"><p class="text-muted">Ainda não há mentores com avaliações para destacar.</p></div>';
-        }
-    }
-
     function renderMentorList(filter = '') {
         const lowercasedFilter = filter.trim().toLowerCase();
 
@@ -327,9 +262,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function renderAdminDashboard() {
-        document.getElementById('total-users-stat').textContent = users.length;
-        document.getElementById('total-mentors-stat').textContent = users.filter(u => u.role === 'mentor').length;
-        document.getElementById('total-mentees-stat').textContent = users.filter(u => u.role === 'mentee').length;
+        const manageableUsers = users.filter(u => u.role !== 'admin');
+        const adminUsers = users.filter(u => u.role === 'admin');
+    
+        document.getElementById('total-users-stat').textContent = manageableUsers.length;
+        document.getElementById('total-mentors-stat').textContent = manageableUsers.filter(u => u.role === 'mentor').length;
+        document.getElementById('total-mentees-stat').textContent = manageableUsers.filter(u => u.role === 'mentee').length;
+        document.getElementById('total-admins-stat').textContent = adminUsers.length;
+        
         renderUserListForAdmin();
     }
 
