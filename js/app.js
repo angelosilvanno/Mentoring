@@ -811,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 list:     'lista' 
             },
 
-            allDayText: 'Dia inteiro',
+            allDayText: 'Dia',
 
             headerToolbar: {
                 left: 'prev,next today',
