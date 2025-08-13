@@ -1,0 +1,196 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@mentoring.com",
+      "password": "admin",
+      "role": "admin",
+      "course": "Sistema",
+      "gender": "outro",
+      "skills": [
+        "Gerenciamento"
+      ],
+      "bio": "",
+      "availability": ""
+    },
+    {
+      "id": 1752536264951,
+      "name": "Ângelo Silvano",
+      "email": "angeloestudante1@gmail.com",
+      "password": "angelosilva",
+      "role": "mentor",
+      "course": "BTI",
+      "gender": "masculino",
+      "skills": [
+        "Algoritmos",
+        "Processo de Software"
+      ],
+      "bio": "Sou estudante de BTI e sou o monitor de Algoritmos e ajudo na organização de projetos.",
+      "availability": "Segundas: 14h a 16h\nQuartas: 08 a 10h"
+    },
+    {
+      "id": 1752537232972,
+      "name": "Silvano Silva",
+      "email": "familiasabino14@gmail.com",
+      "password": "familiasabino",
+      "role": "mentee",
+      "course": "BTI",
+      "gender": "masculino",
+      "skills": [],
+      "bio": "",
+      "availability": ""
+    },
+    {
+      "id": 1752603210842,
+      "name": "José Sabino",
+      "email": "josesabino11@gmail.com",
+      "password": "helione25",
+      "role": "mentor",
+      "course": "BTI",
+      "gender": "masculino",
+      "skills": [
+        "Matemática",
+        "Python"
+      ],
+      "bio": "Sou estudante do curso de BTI e atualmente estou como monitor da disciplina de Álgebra Linear ",
+      "availability": "Terças: 14h as 16:30h\nQuartas: 09h as 10h"
+    },
+    {
+      "id": 1752604020726,
+      "name": "Angelica Sabino",
+      "email": "angelicasabino1977@gmail.com",
+      "password": "familiaunida",
+      "role": "mentor",
+      "course": "BTI",
+      "gender": "feminino",
+      "skills": [
+        "Matemática"
+      ],
+      "bio": "Sou a estudante do curso de BTI e sou a monitora da disciplina Cálculo I",
+      "availability": "Segundas: 08h as 10h\nQuintas: 07:30h as 09:30h"
+    },
+    {
+      "id": 1754335061216,
+      "name": "Silvani Macário",
+      "email": "silvanimacario@gmail.com",
+      "password": "elizabeth",
+      "role": "mentee",
+      "course": "BTI",
+      "gender": "masculino",
+      "skills": [],
+      "bio": "",
+      "availability": ""
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1752537947220,
+      "mentorId": 1752536264951,
+      "menteeId": 1752537232972,
+      "date": "2025-07-24",
+      "time": "09:05",
+      "topic": "Uma dúvida sobre a disciplina Algoritmo",
+      "status": "avaliado",
+      "createdAt": "2025-07-15T00:05:47.220Z",
+      "feedback": {
+        "rating": 5,
+        "comment": "foi bom, tirei todas as dúvidas possíveis",
+        "date": "2025-08-05T23:24:34.126Z"
+      }
+    },
+    {
+      "id": 1752603648065,
+      "mentorId": 1752603210842,
+      "menteeId": 1752537232972,
+      "date": "2025-07-15",
+      "time": "15:25",
+      "topic": "Estou em dúvida sobre o último assunto da disciplina Álgebra Linear",
+      "status": "aceito",
+      "createdAt": "2025-07-15T18:20:48.065Z"
+    },
+    {
+      "id": 1754335145713,
+      "mentorId": 1752536264951,
+      "menteeId": 1754335061216,
+      "date": "2025-08-04",
+      "time": "16:22",
+      "topic": "estou em dúvida de como se usa o VSCode, sou iniciante",
+      "status": "realizado",
+      "createdAt": "2025-08-04T19:19:05.713Z"
+    },
+    {
+      "id": 1754951900829,
+      "mentorId": 1752536264951,
+      "menteeId": 1752537232972,
+      "date": "2025-08-12",
+      "time": "08:37",
+      "topic": "Gostaria de uma ajuda em projetos, qual tipo de projeto devo começar?",
+      "status": "realizado",
+      "createdAt": "2025-08-11T22:38:20.829Z"
+    },
+    {
+      "id": 1755004005726,
+      "mentorId": 1752536264951,
+      "menteeId": 1754335061216,
+      "date": "2025-08-12",
+      "time": "14:10",
+      "topic": "gostaria de saber como posso organizar um projeto no github",
+      "status": "realizado",
+      "createdAt": "2025-08-12T13:06:45.726Z"
+    },
+    {
+      "id": 1755004078303,
+      "mentorId": 1752604020726,
+      "menteeId": 1754335061216,
+      "date": "2025-08-12",
+      "time": "15:10",
+      "topic": "estou em dúvida na lista de Calculo, quero saber como posso aprender esse último assunto?",
+      "status": "aceito",
+      "createdAt": "2025-08-12T13:07:58.303Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": 1752538998801,
+      "senderId": 1752537232972,
+      "receiverId": 1752536264951,
+      "subject": "Uma Dúvida",
+      "body": "Estou com dúvida sobre o último assunto da disciplina Banco de Dados ",
+      "timestamp": "2025-07-15T00:23:18.801Z"
+    },
+    {
+      "id": 1752603700055,
+      "senderId": 1752537232972,
+      "receiverId": 1752603210842,
+      "subject": "Dúvida sobre Álgebra Linear",
+      "body": "Estou em dúvida sobre o último assunto da disciplina Álgebra Linear, quero exercícios",
+      "timestamp": "2025-07-15T18:21:40.055Z"
+    }
+  ],
+  "forumTopics": [
+    {
+      "id": 1752538398569,
+      "title": "Materiais sobre a disciplina Algoritmo ",
+      "authorId": 1752536264951,
+      "body": "Curso de Lógica de Programação: https://youtube.com/playlist?list=PLHz_AreHm4dmSj0MHol_aoNYCSGFqvfXV&si=os6n8xkHA7php_cS",
+      "createdAt": "2025-07-15T00:13:18.569Z",
+      "replies": [
+        {
+          "id": 1752538461506,
+          "authorId": 1752537232972,
+          "body": "Obrigado Ângelo",
+          "createdAt": "2025-07-15T00:14:21.506Z"
+        }
+      ]
+    },
+    {
+      "id": 1754910355151,
+      "title": "Projetos práticos para Iniciantes",
+      "authorId": 1752536264951,
+      "body": "Projetos práticos passo a passo da Rafaella Ballerini\n: https://youtube.com/playlist?list=PLhkO7OMKgT_rwCMqErLDnhcxVWy8t0e74&si=B2QxuGyP_ZsE8aJW",
+      "createdAt": "2025-08-11T11:05:55.151Z",
+      "replies": []
+    }
+  ]
+}
