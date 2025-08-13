@@ -149,8 +149,6 @@
                           <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-mentees">0</h4><p class="text-muted mb-0">Mentees Atendidos</p></div></div></div>
                           <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h5" id="mentor-stats-next">Nenhum</h4><p class="text-muted mb-0">Próximo Encontro</p></div></div></div>
                         </div>
-
-                        <!-- NOVA ESTRUTURA DE ABAS PARA AGENDAMENTOS DO MENTOR -->
                         <ul class="nav nav-tabs nav-fill mb-3" id="appointments-tabs" role="tablist">
                           <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-tab-pane" type="button" role="tab">Próximos Encontros</button>
@@ -179,7 +177,50 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="fs-5 mb-0">Fórum da Comunidade</h2><button class="btn btn-primary btn-sm" id="btn-create-topic">
                 <i class="bi bi-plus-circle"></i> Criar Tópico</button></div><div class="card-body" id="forum-card-body"><div class="list-group"></div></div></div></section>
-          <section id="admin-panel" class="content-view col-12 d-none"><div class="row g-4"><div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title" id="total-users-stat">0</h5><p class="card-text text-muted">Total de Usuários</p></div></div></div><div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title" id="total-mentors-stat">0</h5><p class="card-text text-muted">Mentores</p></div></div></div><div class="col-md-4"><div class="card text-center"><div class="card-body"><h5 class="card-title" id="total-mentees-stat">0</h5><p class="card-text text-muted">Mentees</p></div></div></div></div><div class="card mt-4"><div class="card-header d-flex justify-content-between align-items-center"><h2 class="fs-5 mb-0">Gerenciamento de Usuários</h2><button class="btn btn-primary btn-sm" id="btn-add-user"><i class="bi bi-plus-circle"></i> Adicionar Usuário</button></div><div class="card-body" id="user-list-container"><ul id="users-list-ul" class="list-group list-group-flush"></ul></div></div></section>
+          
+          <section id="admin-panel" class="content-view col-12 d-none">
+            <div class="row g-4">
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5 class="card-title" id="total-users-stat">0</h5>
+                    <p class="card-text text-muted">Membros da Comunidade</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5 class="card-title" id="total-mentors-stat">0</h5>
+                    <p class="card-text text-muted">Mentores</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5 class="card-title" id="total-mentees-stat">0</h5>
+                    <p class="card-text text-muted">Mentees</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5 class="card-title" id="total-admins-stat">0</h5>
+                    <p class="card-text text-muted">Administradores</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card mt-4">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="fs-5 mb-0">Gerenciamento de Usuários</h2>
+                <button class="btn btn-primary btn-sm" id="btn-add-user"><i class="bi bi-plus-circle"></i> Adicionar Usuário</button>
+              </div>
+              <div class="card-body" id="user-list-container"><ul id="users-list-ul" class="list-group list-group-flush"></ul></div>
+            </div>
+          </section>
         </div>
     </main>
   </div>
@@ -263,7 +304,11 @@ Quartas: 14h - 16h"></textarea></div>
             <div class="modal-footer px-0 pb-0">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
               <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
-            </div></form></div></div></div></div>
+            </div></form>
+          </div>
+        </div>
+      </div>
+    </div>
   <div class="modal fade" id="createTopicModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered">
     <div class="modal-content"><div class="modal-header">
       <h1 class="modal-title fs-5" id="createTopicModalLabel">Criar Novo Tópico</h1>
