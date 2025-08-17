@@ -2,11 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "API RESTful para a plataforma de mentoria.",
-  "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "start": "node src/server.js",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
   "keywords": [
     "api",
     "nodejs",
