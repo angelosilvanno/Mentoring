@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- CONSTANTES DE ELEMENTOS DO DOM ---
     const authWrapper = document.getElementById('auth-wrapper');
     const appWrapper = document.getElementById('app-wrapper');
     const loginContainer = document.getElementById('login-container');
@@ -51,8 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const mentorAppointmentView = document.getElementById('mentor-appointment-view');
     const editAppointmentModal = new bootstrap.Modal(document.getElementById('editAppointmentModal'));
     const editAppointmentForm = document.getElementById('form-edit-appointment');
-    
-    // --- COMPONENTES DE FEEDBACK ---
+
     const toastElement = document.getElementById('appToast');
     const appToast = new bootstrap.Toast(toastElement, { delay: 4000 });
     const confirmModalElement = document.getElementById('confirmModal');
@@ -60,15 +58,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const infoModalElement = document.getElementById('infoModal');
     const appInfoModal = new bootstrap.Modal(infoModalElement);
 
-    // --- CONFIGURAÇÃO DA API E ESTADO DA APLICAÇÃO ---
-    const API_BASE_URL = 'http://localhost:3001';
-    let users = [];
-    let appointments = [];
-    let messages = [];
-    let forumTopics = [];
-    let currentUser = null;
+    let users = JSON.parse(localStorage.getItem('mentoring_users')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mentoring_appointments')) || [];
+    let messages = JSON.parse(localStorage.getItem('mentoring_messages')) || [];
+    let forumTopics = JSON.parse(localStorage.getItem('mentoring_forum_topics')) || [];
+    let currentUser = JSON.parse(sessionStorage.getItem('mentoring_currentUser'));
     let calendar = null;
 
+    function saveUsers() { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
+    function saveAppointments() { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
+    function saveMessages() { localStorage.setItem('mentoring_messages', JSON.stringify(messages)); }
+    function saveForumTopics() { localStorage.setItem('mentoring_forum_topics', JSON.stringify(forumTopics)); }
     function setCurrentUser(user) { currentUser = user; sessionStorage.setItem('mentoring_currentUser', JSON.stringify(user)); }
     function clearCurrentUser() { currentUser = null; sessionStorage.removeItem('mentoring_currentUser'); }
 
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('infoModalBody').innerHTML = bodyContent;
         appInfoModal.show();
     }
-    
+
     function getAvatarUrl(user) {
         if (!user || !user.email) return '';
         const seed = encodeURIComponent(user.email);
@@ -147,120 +147,59 @@ document.addEventListener('DOMContentLoaded', function () {
             switchView('admin-panel');
         }
     }
-    
-    async function handleLogin(e) {
+
+    function handleLogin(e) {
         e.preventDefault();
         const email = e.target.querySelector('input[type="email"]').value;
         const password = e.target.querySelector('input[type="password"]').value;
-        try {
-            const response = await fetch(`${API_BASE_URL}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Erro desconhecido');
-            }
-
-            setCurrentUser(data);
+        const foundUser = users.find(user => user.email === email && user.password === password);
+        if (foundUser) {
+            setCurrentUser(foundUser);
             window.location.reload();
-
-        } catch (error) {
-            console.error("Erro no login:", error);
-            showToast(error.message || 'Erro ao tentar fazer login. Verifique sua conexão.', 'danger');
+        } else {
+            showToast('E-mail ou senha inválidos!', 'danger');
         }
     }
-    
-    async function handlePublicRegister(e) {
+
+    function handlePublicRegister(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const userData = Object.fromEntries(formData.entries());
         if (!userData.fullName || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
             showToast("Por favor, preencha todos os campos obrigatórios.", "warning"); return;
         }
-
-        try {
-            const newUser = { 
-                name: userData.fullName, 
-                username: userData.username, 
-                email: userData.email, 
-                password: userData.password, 
-                course: userData.course, 
-                role: userData.role, 
-                gender: userData.gender,
-                skills: [], 
-                bio: '', 
-                availability: '' 
-            };
-            
-            const response = await fetch(`${API_BASE_URL}/users`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUser)
-            });
-            
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'Não foi possível criar o usuário.');
-            }
-
-            showToast('Cadastro realizado com sucesso! Faça o login.', 'success');
-            showLoginFormView();
-            registerForm.reset();
-        } catch (error) {
-            console.error("Erro no cadastro:", error);
-            showToast(error.message || 'Ocorreu um erro ao realizar o cadastro.', 'danger');
+        if (users.some(user => user.email === userData.email)) {
+            showToast('Este e-mail já está em uso.', 'danger'); return;
         }
+        const newUser = { id: Date.now(), name: userData.fullName, username: userData.username, email: userData.email, password: userData.password, course: userData.course, role: userData.role, gender: userData.gender, skills: [], bio: '', availability: '' };
+        users.push(newUser);
+        saveUsers();
+        showToast('Cadastro realizado com sucesso! Faça o login.', 'success');
+        showLoginFormView();
+        registerForm.reset();
     }
-    
-    async function handleAdminAddUser(e) {
+
+    function handleAdminAddUser(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const userData = Object.fromEntries(formData.entries());
         if (!userData.fullName || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
             showToast("Por favor, preencha todos os campos.", "warning"); return;
         }
-
-        try {
-            const newUser = { 
-                name: userData.fullName, 
-                email: userData.email, 
-                password: userData.password, 
-                course: userData.course, 
-                role: userData.role, 
-                gender: userData.gender, 
-                skills: userData.skills ? userData.skills.split(',').map(skill => skill.trim()).filter(Boolean) : [], 
-                bio: '', 
-                availability: '' 
-            };
-            
-            const response = await fetch(`${API_BASE_URL}/users`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUser)
-            });
-            
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'Não foi possível adicionar o usuário.');
-            }
-            
-            users.push(data);
-            showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
-            addUserForm.reset();
-            addUserModal.hide();
-            renderAdminDashboard();
-        } catch (error) {
-            console.error("Erro ao adicionar usuário:", error);
-            showToast(error.message || 'Ocorreu um erro ao adicionar o usuário.', 'danger');
+        if (users.some(user => user.email === userData.email)) {
+            showToast('Este e-mail já está em uso.', 'danger'); return;
         }
+        const newUser = { id: Date.now(), name: userData.fullName, email: userData.email, password: userData.password, course: userData.course, role: userData.role, gender: userData.gender, skills: userData.skills ? userData.skills.split(',').map(skill => skill.trim()).filter(Boolean) : [], bio: '', availability: '' };
+        users.push(newUser);
+        saveUsers();
+        showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
+        addUserForm.reset();
+        addUserModal.hide();
+        renderAdminDashboard();
     }
 
-    function buildMentorCard(mentor, isHorizontal = false) {
-        const allRatings = appointments.filter(a => a.mentor_id === mentor.id && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
+    function buildMentorCard(mentor) {
+        const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
         const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
         const ratingHTML = averageRating > 0 ?
             `<div class="d-flex align-items-center justify-content-center small text-muted mb-2">
@@ -269,11 +208,10 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>` :
             '<div class="small text-muted mb-2">Ainda não avaliado</div>';
 
-        const skillBadges = mentor.skills ? mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('') : '';
-        
-        const cardClass = isHorizontal ? 'mentor-card-horizontal' : 'col-md-6 col-lg-4';
-        const cardStructure = `
-            <div class="${cardClass}">
+        const skillBadges = mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('');
+
+        return `
+            <div class="col-md-6 col-lg-4">
                 <div class="card mentor-card h-100 shadow-sm text-center">
                     <div class="card-body d-flex flex-column">
                         <img src="${getAvatarUrl(mentor)}" class="rounded-circle mb-3 mx-auto" style="width: 90px; height: 90px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
@@ -288,28 +226,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
         `;
-        return cardStructure;
     }
 
     function renderRecommendedMentors() {
         const container = document.getElementById('recommended-mentors-container');
         container.innerHTML = '';
-        const recommended = users.filter(user => user.role === 'mentor' && user.course === currentUser.course && user.id !== currentUser.id).slice(0, 5);
-        
-        if(recommended.length > 0) {
-            recommended.forEach(mentor => container.innerHTML += buildMentorCard(mentor, true));
+        const recommended = users.filter(user => 
+            user.role === 'mentor' && 
+            user.course === currentUser.course && 
+            user.id !== currentUser.id
+        );
+
+        if (recommended.length > 0) {
+            recommended.forEach(mentor => container.innerHTML += buildMentorCard(mentor));
         } else {
-            container.innerHTML = '<p class="text-muted">Não encontramos mentores do seu curso no momento.</p>';
+            container.innerHTML = `
+                <div class="col-12 text-center p-5 text-muted">
+                    <i class="bi bi-compass fs-1"></i>
+                    <h5 class="mt-3">Nenhum mentor recomendado do seu curso</h5>
+                    <p>Ainda não há mentores do curso de ${currentUser.course}. Que tal explorar os mentores em destaque ou buscar em toda a comunidade?</p>
+                </div>
+            `;
         }
     }
-    
+
     function renderFeaturedMentors() {
         const container = document.getElementById('featured-mentors-container');
         container.innerHTML = '';
         const mentorsWithRatings = users
             .filter(user => user.role === 'mentor')
             .map(mentor => {
-                const allRatings = appointments.filter(a => a.mentor_id === mentor.id && a.feedback?.rating).map(a => a.feedback.rating);
+                const allRatings = appointments.filter(a => a.mentorId === mentor.id && a.feedback?.rating).map(a => a.feedback.rating);
                 const averageRating = allRatings.length > 0 ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 0;
                 return { ...mentor, averageRating, ratingCount: allRatings.length };
             })
@@ -317,10 +264,16 @@ document.addEventListener('DOMContentLoaded', function () {
             .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount)
             .slice(0, 3);
 
-        if(mentorsWithRatings.length > 0) {
-            mentorsWithRatings.forEach(mentor => container.innerHTML += buildMentorCard(mentor, false));
+        if (mentorsWithRatings.length > 0) {
+            mentorsWithRatings.forEach(mentor => container.innerHTML += buildMentorCard(mentor));
         } else {
-            container.innerHTML = '<div class="col"><p class="text-muted">Ainda não há mentores com avaliações para destacar.</p></div>';
+            container.innerHTML = `
+                <div class="col-12 text-center p-5 text-muted">
+                    <i class="bi bi-star fs-1"></i>
+                    <h5 class="mt-3">Ainda não há mentores em destaque</h5>
+                    <p>Os mentores mais bem avaliados pela comunidade aparecerão aqui assim que receberem feedback.</p>
+                </div>
+            `;
         }
     }
 
@@ -339,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const mentors = users.filter(user => user.role === 'mentor');
         const filteredMentors = mentors.filter(mentor =>
             mentor.name.toLowerCase().includes(lowercasedFilter) ||
-            (mentor.skills && mentor.skills.some(skill => skill.toLowerCase().includes(lowercasedFilter)))
+            mentor.skills.some(skill => skill.toLowerCase().includes(lowercasedFilter))
         );
 
         mentorsListContainer.innerHTML = '';
@@ -386,16 +339,16 @@ document.addEventListener('DOMContentLoaded', function () {
         renderPopularTags();
         renderMentorList(); 
     }
-    
+
     function renderAdminDashboard() {
         const manageableUsers = users.filter(u => u.role !== 'admin');
         const adminUsers = users.filter(u => u.role === 'admin');
-    
+
         document.getElementById('total-users-stat').textContent = manageableUsers.length;
         document.getElementById('total-mentors-stat').textContent = manageableUsers.filter(u => u.role === 'mentor').length;
         document.getElementById('total-mentees-stat').textContent = manageableUsers.filter(u => u.role === 'mentee').length;
         document.getElementById('total-admins-stat').textContent = adminUsers.length;
-        
+
         renderUserListForAdmin();
     }
 
@@ -411,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    async function handleDeleteUser(userId) {
+    function handleDeleteUser(userId) {
         if (!currentUser || currentUser.role !== 'admin') return;
         const userToDelete = users.find(user => user.id === userId);
         if (userToDelete && userToDelete.role === 'admin') return;
@@ -419,102 +372,45 @@ document.addEventListener('DOMContentLoaded', function () {
         showConfirm(
             'Excluir Usuário', 
             `Tem certeza que deseja remover ${userToDelete.name}? Esta ação não pode ser desfeita.`, 
-            async () => {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/users/${userId}`, { method: 'DELETE' });
-                    if (!response.ok) throw new Error('Falha ao remover o usuário.');
-                    
-                    users = users.filter(user => user.id !== userId);
-                    renderAdminDashboard();
-                    showToast(`Usuário ${userToDelete.name} removido com sucesso.`, 'success');
-                } catch (error) {
-                    console.error("Erro ao deletar usuário:", error);
-                    showToast('Não foi possível remover o usuário. Tente novamente.', 'danger');
-                }
+            () => {
+                users = users.filter(user => user.id !== userId);
+                appointments = appointments.filter(a => a.mentorId !== userId && a.menteeId !== userId);
+                messages = messages.filter(m => m.senderId !== userId && m.receiverId !== userId);
+                saveUsers();
+                saveAppointments();
+                saveMessages();
+                renderAdminDashboard();
+                showToast(`Usuário ${userToDelete.name} removido com sucesso.`, 'success');
             }
         );
     }
 
-    async function handleProfileUpdate(e) {
+    function handleProfileUpdate(e) {
         e.preventDefault();
-        const updatedProfile = {
-            name: document.getElementById('edit-name').value,
-            bio: document.getElementById('edit-bio').value,
-            skills: document.getElementById('edit-skills').value.split(',').map(skill => skill.trim()).filter(Boolean),
-            availability: document.getElementById('edit-availability').value
-        };
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/${currentUser.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedProfile)
-            });
-            if (!response.ok) throw new Error('Falha ao atualizar o perfil.');
-
-            const updatedUser = await response.json();
-            
-            Object.assign(currentUser, updatedUser);
-            const userIndex = users.findIndex(user => user.id === currentUser.id);
-            if (userIndex !== -1) users[userIndex] = currentUser;
-
-            setCurrentUser(currentUser);
-            showToast('Perfil atualizado com sucesso!', 'success');
-            editProfileModal.hide();
-            updateDashboardUI(currentUser);
-        } catch (error) {
-            console.error("Erro ao atualizar perfil:", error);
-            showToast('Não foi possível atualizar o perfil. Tente novamente.', 'danger');
-        }
-    }
-
-    function buildReviewCard(review) {
-        const mentee = users.find(u => u.id === review.mentee_id);
-        if (!mentee) return '';
-
-        let starsHTML = '';
-        for (let i = 0; i < 5; i++) {
-            starsHTML += `<i class="bi ${i < review.feedback.rating ? 'bi-star-fill text-warning' : 'bi-star'}"></i>`;
-        }
-
-        return `
-            <div class="card mb-2">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle me-2" style="width:30px; height:30px;">
-                        <strong class="me-auto">${mentee.name}</strong>
-                        <div class="text-nowrap">${starsHTML}</div>
-                    </div>
-                    <p class="card-text fst-italic mb-0">"${review.feedback.comment || 'Nenhum comentário fornecido.'}"</p>
-                </div>
-            </div>
-        `;
+        currentUser.name = document.getElementById('edit-name').value;
+        currentUser.bio = document.getElementById('edit-bio').value;
+        currentUser.skills = document.getElementById('edit-skills').value.split(',').map(skill => skill.trim()).filter(Boolean);
+        currentUser.availability = document.getElementById('edit-availability').value;
+        const userIndex = users.findIndex(user => user.id === currentUser.id);
+        if (userIndex !== -1) users[userIndex] = currentUser;
+        saveUsers();
+        setCurrentUser(currentUser);
+        showToast('Perfil atualizado com sucesso!', 'success');
+        editProfileModal.hide();
+        updateDashboardUI(currentUser);
     }
 
     function showMentorProfile(mentorId) {
         const mentor = users.find(user => user.id === mentorId);
         if (!mentor) return;
-
-        const allRatings = appointments.filter(a => a.mentor_id === mentorId && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
+        const allRatings = appointments.filter(a => a.mentorId === mentorId && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
         const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
-        
         document.getElementById('modal-profile-avatar').src = getAvatarUrl(mentor);
         document.getElementById('modal-profile-name').textContent = mentor.name;
         document.getElementById('modal-profile-course').textContent = mentor.course;
-        
-        const ratingContainer = document.getElementById('modal-profile-rating');
-        if (allRatings.length > 0) {
-            ratingContainer.innerHTML = `
-                <span class="d-flex align-items-center justify-content-center">
-                    <i class="bi bi-star-fill text-warning me-1"></i> 
-                    <strong>${averageRating}</strong> 
-                    <span class="text-muted ms-1">(${allRatings.length} ${allRatings.length > 1 ? 'avaliações' : 'avaliação'})</span>
-                </span>`;
-        } else {
-            ratingContainer.innerHTML = '<span class="badge text-bg-secondary">Ainda não avaliado</span>';
-        }
-
         document.getElementById('modal-profile-bio').textContent = mentor.bio || 'Este mentor ainda não adicionou uma biografia.';
+        const ratingContainer = document.getElementById('modal-profile-rating');
+        ratingContainer.innerHTML = averageRating > 0 ? `<i class="bi bi-star-fill text-warning"></i> ${averageRating} (${allRatings.length} avaliações)` : '<span class="text-muted">Ainda não avaliado</span>';
         const skillsContainer = document.getElementById('modal-profile-skills');
         skillsContainer.innerHTML = '';
         if (mentor.skills && mentor.skills.length > 0) {
@@ -530,25 +426,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const historyList = document.getElementById('modal-mentor-history-list');
         historyList.innerHTML = '';
-        const completedAppointments = appointments.filter(a => a.mentor_id === mentorId && (a.status === 'realizado' || a.status === 'avaliado')).sort((a,b) => new Date(b.appointment_date) - new Date(a.appointment_date));
+        const completedAppointments = appointments.filter(a => a.mentorId === mentor.id && (a.status === 'realizado' || a.status === 'avaliado')).sort((a,b) => new Date(b.date) - new Date(a.date));
         if (completedAppointments.length > 0) {
             completedAppointments.forEach(app => {
-                const mentee = users.find(u => u.id === app.mentee_id);
-                historyList.innerHTML += `<li class="list-group-item small p-2">"${app.topic}" com ${mentee ? mentee.name : 'aluno'} em ${new Date(app.appointment_date).toLocaleDateString()}</li>`;
+                historyList.innerHTML += `<li class="list-group-item small p-2">"${app.topic}" em ${new Date(app.date).toLocaleDateString()}</li>`;
             });
         } else {
             historyList.innerHTML = '<li class="list-group-item small text-muted p-2">Nenhum encontro finalizado.</li>';
-        }
-
-        const reviewsContainer = document.getElementById('modal-mentor-reviews-list');
-        reviewsContainer.innerHTML = '';
-        const reviewedAppointments = appointments.filter(a => a.mentor_id === mentorId && a.status === 'avaliado' && a.feedback);
-        if (reviewedAppointments.length > 0) {
-            reviewedAppointments.forEach(app => {
-                reviewsContainer.innerHTML += buildReviewCard(app);
-            });
-        } else {
-            reviewsContainer.innerHTML = '<div class="text-center p-4 text-muted">Este mentor ainda não recebeu avaliações.</div>';
         }
 
         sendMessageFromProfileBtn.style.display = 'none';
@@ -559,43 +443,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         requestMentorshipBtn.dataset.mentorId = mentor.id;
         sendMessageFromProfileBtn.dataset.mentorId = mentor.id;
-        
-        const firstTab = new bootstrap.Tab(document.getElementById('about-tab'));
-        firstTab.show();
-
         viewProfileModal.show();
     }
 
-    async function handleRequestMentorshipSubmit(e) {
+    function handleRequestMentorshipSubmit(e) {
         e.preventDefault();
         const mentorId = parseInt(document.getElementById('mentorship-mentor-id').value, 10);
         const date = document.getElementById('mentorship-date').value;
         const time = document.getElementById('mentorship-time').value;
         const topic = document.getElementById('mentorship-topic').value;
         if (!mentorId || !date || !time || !topic) { showToast("Preencha todos os campos.", 'warning'); return; }
-        
-        const newAppointment = { 
-            mentor_id: mentorId, 
-            mentee_id: currentUser.id, 
-            appointment_date: `${date}T${time}:00Z`,
-            topic
-        };
-        try {
-            const response = await fetch(`${API_BASE_URL}/appointments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newAppointment)
-            });
-            if (!response.ok) throw new Error('Não foi possível agendar o encontro.');
-
-            const createdAppointment = await response.json();
-            appointments.push(createdAppointment);
-            showToast('Solicitação de agendamento enviada!', 'success');
-            requestMentorshipModal.hide();
-        } catch (error) {
-            console.error("Erro no agendamento:", error);
-            showToast('Ocorreu um erro ao enviar a solicitação.', 'danger');
-        }
+        appointments.push({ id: Date.now(), mentorId: mentorId, menteeId: currentUser.id, date, time, topic, status: 'pendente', createdAt: new Date().toISOString() });
+        saveAppointments();
+        showToast('Solicitação de agendamento enviada!', 'success');
+        requestMentorshipModal.hide();
     }
 
     function renderAppointments() {
@@ -606,60 +467,49 @@ document.addEventListener('DOMContentLoaded', function () {
             const pastList = document.getElementById('past-appointments-list');
             upcomingList.innerHTML = '';
             pastList.innerHTML = '';
-    
-            const myAppointments = appointments.filter(a => a.mentor_id === currentUser.id);
+
+            const myAppointments = appointments.filter(a => a.mentorId === currentUser.id);
             const now = new Date();
-    
-            const upcoming = myAppointments.filter(a => new Date(a.appointment_date) >= now && ['pendente', 'aceito'].includes(a.status));
-            const past = myAppointments.filter(a => new Date(a.appointment_date) < now || ['recusado', 'realizado', 'avaliado'].includes(a.status));
-            
+
+            const upcoming = myAppointments.filter(a => new Date(`${a.date}T${a.time}`) >= now && ['pendente', 'aceito'].includes(a.status));
+            const past = myAppointments.filter(a => new Date(`${a.date}T${a.time}`) < now || ['recusado', 'realizado', 'avaliado'].includes(a.status));
+
             const completedCount = past.filter(a => ['realizado', 'avaliado'].includes(a.status)).length;
-            const menteesMet = new Set(past.map(a => a.mentee_id)).size;
-    
-            const sortedUpcoming = [...upcoming].sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date));
+            const menteesMet = new Set(past.map(a => a.menteeId)).size;
+
+            const sortedUpcoming = [...upcoming].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
             const nextAppointment = sortedUpcoming[0];
-    
+
             document.getElementById('mentor-stats-total').textContent = completedCount;
             document.getElementById('mentor-stats-mentees').textContent = menteesMet;
-            if (nextAppointment) {
-                const nextDate = new Date(nextAppointment.appointment_date);
-                const today = new Date();
-                const tomorrow = new Date();
-                tomorrow.setDate(today.getDate() + 1);
-
-                if (nextDate.toDateString() === today.toDateString()) {
-                    document.getElementById('mentor-stats-next').textContent = `Hoje às ${nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-                } else if (nextDate.toDateString() === tomorrow.toDateString()) {
-                    document.getElementById('mentor-stats-next').textContent = `Amanhã às ${nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-                } else {
-                    document.getElementById('mentor-stats-next').textContent = nextDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
-                }
+            if(nextAppointment) {
+                document.getElementById('mentor-stats-next').textContent = new Date(nextAppointment.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
             } else {
-                document.getElementById('mentor-stats-next').textContent = 'Nenhum';
+                 document.getElementById('mentor-stats-next').textContent = 'Nenhum';
             }
-    
+
             if (sortedUpcoming.length === 0) {
                 upcomingList.innerHTML = '<div class="text-center p-4 text-muted">Nenhuma solicitação ou encontro futuro.</div>';
             } else {
                 sortedUpcoming.forEach(a => upcomingList.innerHTML += buildAppointmentCard(a));
             }
-    
+
             if (past.length === 0) {
                 pastList.innerHTML = '<div class="text-center p-4 text-muted">Nenhum encontro no seu histórico.</div>';
             } else {
-                past.sort((a,b) => new Date(b.appointment_date) - new Date(a.appointment_date)).forEach(a => pastList.innerHTML += buildAppointmentCard(a));
+                past.sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`)).forEach(a => pastList.innerHTML += buildAppointmentCard(a));
             }
         }
     }
-    
+
     function buildAppointmentCard(appointment) {
-        const otherUser = users.find(u => u.id === appointment.mentee_id);
+        const otherUser = users.find(u => u.id === appointment.menteeId);
         if (!otherUser) return '';
-        
+
         let statusBadge, actions = '';
-        const appointmentDate = new Date(appointment.appointment_date);
+        const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
         const isPast = appointmentDate < new Date();
-        
+
         switch (appointment.status) {
             case 'pendente':
                 statusBadge = `<span class="badge text-bg-warning">Pendente</span>`;
@@ -698,88 +548,56 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    async function handleAppointmentAction(action, id) {
+    function handleAppointmentAction(action, id) {
         const appointmentIndex = appointments.findIndex(a => a.id === id);
         if (appointmentIndex === -1) return;
-        
+
         if (action === 'excluir') {
-            const mentee = users.find(u => u.id === appointments[appointmentIndex].mentee_id);
+            const mentee = users.find(u => u.id === appointments[appointmentIndex].menteeId);
             showConfirm(
                 'Excluir Agendamento',
                 `Tem certeza que deseja excluir este agendamento? Uma notificação será enviada para ${mentee.name}.`,
-                async () => {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/appointments/${id}`, { method: 'DELETE' });
-                        if (!response.ok) throw new Error('Falha ao excluir agendamento.');
-                        appointments.splice(appointmentIndex, 1);
-                        showToast('Agendamento excluído com sucesso.', 'success');
-                        renderAppointments();
-                    } catch (error) {
-                        console.error("Erro ao excluir:", error);
-                        showToast('Não foi possível excluir o agendamento.', 'danger');
-                    }
+                () => {
+                    appointments.splice(appointmentIndex, 1);
+                    saveAppointments();
+                    showToast('Agendamento excluído com sucesso.', 'success');
+                    renderAppointments();
                 }
             );
         } else if (action === 'editar') {
             const appointment = appointments[appointmentIndex];
-            const appDate = new Date(appointment.appointment_date);
             document.getElementById('edit-appointment-id').value = appointment.id;
-            document.getElementById('edit-appointment-date').value = appDate.toISOString().split('T')[0];
-            document.getElementById('edit-appointment-time').value = appDate.toTimeString().split(' ')[0].substring(0, 5);
+            document.getElementById('edit-appointment-date').value = appointment.date;
+            document.getElementById('edit-appointment-time').value = appointment.time;
             document.getElementById('edit-appointment-topic').value = appointment.topic;
             editAppointmentModal.show();
             return;
         } else {
-            try {
-                const response = await fetch(`${API_BASE_URL}/appointments/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: action })
-                });
-                if (!response.ok) throw new Error('Falha ao atualizar status.');
-                
-                appointments[appointmentIndex].status = action;
-                renderAppointments();
-            } catch (error) {
-                console.error("Erro ao atualizar status:", error);
-                showToast('Não foi possível atualizar o status do agendamento.', 'danger');
-            }
+            appointments[appointmentIndex].status = action;
+            saveAppointments();
         }
+        renderAppointments();
     }
-    
-    async function handleUpdateAppointment(e) {
+
+    function handleUpdateAppointment(e) {
         e.preventDefault();
         const id = parseInt(document.getElementById('edit-appointment-id').value);
         const shouldNotify = document.getElementById('edit-notify-mentee').checked;
         const appointmentIndex = appointments.findIndex(a => a.id === id);
         if (appointmentIndex === -1) return;
 
-        const updatedData = {
-            topic: document.getElementById('edit-appointment-topic').value,
-            appointment_date: `${document.getElementById('edit-appointment-date').value}T${document.getElementById('edit-appointment-time').value}:00Z`
-        };
+        appointments[appointmentIndex].date = document.getElementById('edit-appointment-date').value;
+        appointments[appointmentIndex].time = document.getElementById('edit-appointment-time').value;
+        appointments[appointmentIndex].topic = document.getElementById('edit-appointment-topic').value;
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/appointments/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            });
-            if (!response.ok) throw new Error('Falha ao atualizar o agendamento.');
-
-            Object.assign(appointments[appointmentIndex], updatedData);
-            
-            editAppointmentModal.hide();
-            editAppointmentForm.reset();
-            showToast(`Agendamento atualizado com sucesso!${shouldNotify ? ' O mentorado foi notificado.' : ''}`, 'success');
-            renderAppointments();
-        } catch (error) {
-            console.error("Erro ao atualizar agendamento:", error);
-            showToast('Não foi possível atualizar o agendamento.', 'danger');
-        }
+        saveAppointments();
+        editAppointmentModal.hide();
+        editAppointmentForm.reset();
+        showToast(`Agendamento atualizado com sucesso!${shouldNotify ? ' O mentorado foi notificado.' : ''}`, 'success');
+        renderAppointments();
     }
 
-    async function handleFeedbackSubmit(e) {
+    function handleFeedbackSubmit(e) {
         e.preventDefault();
         const appointmentId = parseInt(document.getElementById('feedback-appointment-id').value);
         const rating = parseInt(feedbackStarsContainer.dataset.rating || '0');
@@ -787,69 +605,142 @@ document.addEventListener('DOMContentLoaded', function () {
         if (rating === 0) { showToast('Por favor, selecione uma avaliação de 1 a 5 estrelas.', 'warning'); return; }
         const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
         if (appointmentIndex === -1) return;
-
-        const feedbackData = {
-            status: 'avaliado',
-            feedback: { rating, comment, date: new Date().toISOString() }
-        };
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(feedbackData)
-            });
-            if (!response.ok) throw new Error('Falha ao enviar avaliação.');
-
-            Object.assign(appointments[appointmentIndex], feedbackData);
-            
-            showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
-            feedbackModal.hide();
-            renderAppointments();
-        } catch (error) {
-            console.error("Erro ao enviar feedback:", error);
-            showToast('Não foi possível enviar a avaliação.', 'danger');
-        }
+        appointments[appointmentIndex].status = 'avaliado';
+        appointments[appointmentIndex].feedback = { rating, comment, date: new Date().toISOString() };
+        saveAppointments();
+        showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
+        feedbackModal.hide();
+        renderAppointments();
     }
 
     function renderConversations() {
-        // Implementar com API
+        conversationsListUl.innerHTML = '';
+        const conversationPartners = new Map();
+        messages.filter(m => m.senderId === currentUser.id || m.receiverId === currentUser.id).forEach(m => {
+            const partnerId = m.senderId === currentUser.id ? m.receiverId : m.senderId;
+            const lastTimestamp = conversationPartners.get(partnerId);
+            if (!lastTimestamp || new Date(m.timestamp) > new Date(lastTimestamp)) { conversationPartners.set(partnerId, m.timestamp); }
+        });
+        if (conversationPartners.size === 0) {
+            conversationsListUl.innerHTML = '<li class="list-group-item text-muted text-center p-4">Nenhuma conversa iniciada.</li>';
+            return;
+        }
+        const sortedPartners = [...conversationPartners.entries()].sort((a,b) => new Date(b[1]) - new Date(a[1]));
+        sortedPartners.forEach(([partnerId, timestamp]) => {
+            const partner = users.find(u => u.id === partnerId);
+            if(partner) {
+                const lastMessage = messages.filter(m => (m.senderId === partnerId && m.receiverId === currentUser.id) || (m.senderId === currentUser.id && m.receiverId === partnerId)).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                conversationsListUl.innerHTML += `<li class="list-group-item list-group-item-action" style="cursor: pointer;" data-conversation-with="${partner.id}"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">${partner.name}</h5><small>${new Date(lastMessage.timestamp).toLocaleDateString()}</small></div><p class="mb-1 text-truncate"><strong>${lastMessage.subject || '(Sem assunto)'}:</strong> ${lastMessage.body}</p></li>`;
+            }
+        });
     }
 
     function openConversationThread(otherUserId) {
-        // Implementar com API
+        const partner = users.find(u => u.id === otherUserId);
+        document.getElementById('viewConversationModalLabel').textContent = `Conversa com ${partner.name}`;
+        const threadBody = document.getElementById('conversation-thread-body');
+        threadBody.innerHTML = '';
+        const relevantMessages = messages.filter(m => (m.senderId === currentUser.id && m.receiverId === otherUserId) || (m.senderId === otherUserId && m.receiverId === currentUser.id)).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        relevantMessages.forEach(msg => {
+            const sender = users.find(u => u.id === msg.senderId);
+            const alignment = msg.senderId === currentUser.id ? 'bg-primary bg-opacity-10' : '';
+            threadBody.innerHTML += `<div class="card mb-2 ${alignment}"><div class="card-body p-2"><div class="d-flex justify-content-between align-items-center mb-1"><small><strong>${sender.name}</strong></small><small class="text-muted">${new Date(msg.timestamp).toLocaleString()}</small></div><p class="card-text small">${msg.body.replace(/\n/g, '<br>')}</p></div></div>`;
+        });
+        replyMessageForm.dataset.replyTo = otherUserId;
+        viewConversationModal.show();
+        threadBody.scrollTop = threadBody.scrollHeight;
     }
 
-    async function handleSendMessage(e) {
-        // Implementar com API
+    function handleSendMessage(e) {
+        e.preventDefault();
+        const recipientId = parseInt(document.getElementById('message-recipient-id').value, 10);
+        const subject = document.getElementById('message-subject').value;
+        const body = document.getElementById('message-body').value;
+        if (!recipientId || !body) { showToast('Mensagem não pode estar vazia.', 'warning'); return; }
+        messages.push({ id: Date.now(), senderId: currentUser.id, receiverId: recipientId, subject: subject, body: body, timestamp: new Date().toISOString() });
+        saveMessages();
+        showToast('Mensagem enviada com sucesso!', 'success');
+        composeMessageForm.reset();
+        composeMessageModal.hide();
+        renderConversations();
+        switchView('mensagem-section');
     }
 
-    async function handleReplyMessage(e) {
-        // Implementar com API
+    function handleReplyMessage(e) {
+        e.preventDefault();
+        const recipientId = parseInt(e.target.dataset.replyTo, 10);
+        const body = document.getElementById('reply-message-body').value;
+        if (!recipientId || !body) return;
+        const originalThreadMessages = messages.filter(m => (m.senderId === currentUser.id && m.receiverId === recipientId) || (m.senderId === recipientId && m.receiverId === currentUser.id));
+        const lastSubject = originalThreadMessages.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0].subject;
+        messages.push({ id: Date.now(), senderId: currentUser.id, receiverId: recipientId, subject: lastSubject.startsWith('Re: ') ? lastSubject : `Re: ${lastSubject}`, body: body, timestamp: new Date().toISOString() });
+        saveMessages();
+        document.getElementById('reply-message-body').value = '';
+        openConversationThread(recipientId);
     }
 
     function renderForumTopics() {
-        // Implementar com API
+        const container = document.querySelector('#forum-card-body .list-group');
+        container.innerHTML = '';
+        if (forumTopics.length === 0) {
+            container.innerHTML = '<p class="text-muted">Ainda não há tópicos no fórum. Seja o primeiro a criar um!</p>';
+            return;
+        }
+        forumTopics.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(topic => {
+            const author = users.find(u => u.id === topic.authorId);
+            container.innerHTML += `<a href="#" class="list-group-item list-group-item-action" data-topic-id="${topic.id}"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">${topic.title}</h5><small>${new Date(topic.createdAt).toLocaleDateString()}</small></div><p class="mb-1">${topic.body.substring(0, 150)}...</p><small>Por ${author ? author.name : 'Usuário Removido'} • ${topic.replies.length} respostas</small></a>`;
+        });
     }
 
-    async function handleCreateTopic(e) {
-        // Implementar com API
+    function handleCreateTopic(e) {
+        e.preventDefault();
+        const title = document.getElementById('topic-title').value;
+        const body = document.getElementById('topic-body').value;
+        if (!title || !body) { showToast('Título e mensagem são obrigatórios.', 'warning'); return; }
+        forumTopics.push({ id: Date.now(), title, body, authorId: currentUser.id, createdAt: new Date().toISOString(), replies: [] });
+        saveForumTopics();
+        showToast('Tópico criado com sucesso!', 'success');
+        createTopicForm.reset();
+        createTopicModal.hide();
+        renderForumTopics();
     }
 
     function openTopic(topicId) {
-        // Implementar com API
+        const topic = forumTopics.find(t => t.id === topicId);
+        if (!topic) return;
+        document.getElementById('view-topic-title').textContent = topic.title;
+        const container = document.getElementById('topic-replies-container');
+        container.innerHTML = '';
+        const author = users.find(u => u.id === topic.authorId);
+        container.innerHTML += `<div class="card mb-3"><div class="card-header bg-light d-flex align-items-center gap-2"><img src="${getAvatarUrl(author)}" class="rounded-circle" style="width:30px;height:30px;"><h6 class="mb-0"><strong>${author.name}</strong> iniciou a discussão</h6></div><div class="card-body"><p>${topic.body.replace(/\n/g, '<br>')}</p><small class="text-muted">${new Date(topic.createdAt).toLocaleString()}</small></div></div><hr>`;
+        topic.replies.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach(reply => {
+            const replier = users.find(u => u.id === reply.authorId);
+            container.innerHTML += `<div class="card mb-2 ms-4"><div class="card-body p-2"><div class="d-flex align-items-center gap-2 mb-1"><img src="${getAvatarUrl(replier)}" class="rounded-circle" style="width:25px;height:25px;"><strong>${replier.name}</strong><small class="text-muted ms-auto">${new Date(reply.createdAt).toLocaleString()}</small></div><p class="card-text small">${reply.body.replace(/\n/g, '<br>')}</p></div></div>`;
+        });
+        replyTopicForm.dataset.topicId = topicId;
+        viewTopicModal.show();
     }
 
-    async function handleReplyToTopic(e) {
-        // Implementar com API
+    function handleReplyToTopic(e) {
+        e.preventDefault();
+        const topicId = parseInt(replyTopicForm.dataset.topicId);
+        const body = document.getElementById('reply-topic-body').value;
+        if (!body) return;
+        const topicIndex = forumTopics.findIndex(t => t.id === topicId);
+        if (topicIndex === -1) return;
+        forumTopics[topicIndex].replies.push({ id: Date.now(), authorId: currentUser.id, body, createdAt: new Date().toISOString() });
+        saveForumTopics();
+        document.getElementById('reply-topic-body').value = '';
+        openTopic(topicId);
     }
-    
+
     function showLoginFormView() {
         registerSection.classList.add('d-none');
         loginContainer.classList.remove('d-none');
     }
 
     function showRegisterFormView() {
+        document.getElementById('admin-register-option').hidden = users.some(user => user.role === 'admin');
         document.getElementById('admin-register-option').hidden = false;
         loginContainer.classList.add('d-none');
         registerSection.classList.remove('d-none');
@@ -861,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const activeLink = document.querySelector(`.nav-link[data-view="${targetViewId}"]`);
         if (activeLink) activeLink.classList.add('active');
         views.forEach(view => view.classList.toggle('d-none', view.id !== targetViewId));
-        
+
         if (targetViewId === 'agendamento-section') {
             if (currentUser.role === 'mentee') {
                 mentorAppointmentView.classList.add('d-none');
@@ -884,16 +775,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function formatAppointmentsForCalendar(myAppointments) {
         return myAppointments.map(app => {
-            const otherUser = users.find(u => u.id === (currentUser.role === 'mentee' ? app.mentor_id : app.mentee_id));
+            const otherUser = users.find(u => u.id === (currentUser.role === 'mentee' ? app.mentorId : app.menteeId));
             let color = '#0d6efd';
             if (app.status === 'pendente') color = '#ffc107';
             if (app.status === 'aceito') color = '#198754';
             if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
-            
+
             return {
                 id: app.id,
                 title: `Mentoria com ${otherUser ? otherUser.name : '...'}`,
-                start: app.appointment_date,
+                start: `${app.date}T${app.time}`,
                 color: color,
                 extendedProps: {
                     topic: app.topic,
@@ -907,19 +798,22 @@ document.addEventListener('DOMContentLoaded', function () {
         if (calendar) {
             calendar.destroy();
         }
-        const myAppointments = appointments.filter(a => a.mentee_id === currentUser.id || a.mentor_id === currentUser.id);
+        const myAppointments = appointments.filter(a => a.menteeId === currentUser.id || a.mentorId === currentUser.id);
         const calendarEvents = formatAppointmentsForCalendar(myAppointments);
 
         calendar = new FullCalendar.Calendar(calendarContainer, {
             locale: 'pt-br',
+
             buttonText: {
-                today: 'hoje',
-                month: 'mês',
-                week: 'semana',
-                day: 'dia',
-                list: 'lista' 
+                today:    'hoje',
+                month:    'mês',
+                week:     'semana',
+                day:      'dia',
+                list:     'lista' 
             },
-            allDayText: 'Dia inteiro',
+
+            allDayText: 'Dia',
+
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -941,59 +835,6 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar.render();
     }
 
-    function initializeAppUI() {
-        if (currentUser) {
-            authWrapper.classList.add('d-none');
-            appWrapper.classList.remove('d-none');
-            appWrapper.classList.add('d-flex');
-            updateDashboardUI(currentUser);
-        } else {
-            authWrapper.classList.remove('d-none');
-            appWrapper.classList.add('d-none');
-        }
-    }
-
-    async function loadInitialData() {
-        if (!currentUser) return initializeAppUI();
-        try {
-            console.log("Iniciando busca de dados da API...");
-            const [usersRes, appointmentsRes, messagesRes, forumTopicsRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/users`),
-                fetch(`${API_BASE_URL}/appointments?user_id=${currentUser.id}`), // CORREÇÃO 1: Enviando o user_id
-                fetch(`${API_BASE_URL}/messages?user_id=${currentUser.id}`),     // CORREÇÃO 2: Rota para mensagens (precisa existir no backend)
-                fetch(`${API_BASE_URL}/forum`)                                    // CORREÇÃO 3: Usando a rota correta '/forum'
-            ]);
-
-            console.log("Status da Resposta - Users:", usersRes.status, usersRes.statusText);
-            console.log("Status da Resposta - Appointments:", appointmentsRes.status, appointmentsRes.statusText);
-            console.log("Status da Resposta - Messages:", messagesRes.status, messagesRes.statusText);
-            console.log("Status da Resposta - ForumTopics:", forumTopicsRes.status, forumTopicsRes.statusText);
-
-            if (!usersRes.ok || !appointmentsRes.ok || !messagesRes.ok || !forumTopicsRes.ok) {
-                throw new Error('Falha ao buscar dados essenciais da aplicação.');
-            }
-
-            users = await usersRes.json();
-            appointments = await appointmentsRes.json();
-            messages = await messagesRes.json();
-            forumTopics = await forumTopicsRes.json();
-            
-            console.log("Dados carregados com sucesso:", { users, appointments, messages, forumTopics });
-
-            initializeAppUI();
-
-        } catch (error) {
-            console.error("Falha detalhada ao carregar dados da API:", error);
-            showToast("Não foi possível conectar ao servidor. Verifique se o backend está rodando e tente recarregar a página.", "danger");
-        }
-    }
-
-    function init() {
-        currentUser = JSON.parse(sessionStorage.getItem('mentoring_currentUser'));
-        loadInitialData();
-    }
-
-    // --- EVENT LISTENERS ---
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handlePublicRegister);
     addUserForm.addEventListener('submit', handleAdminAddUser);
@@ -1016,14 +857,11 @@ document.addEventListener('DOMContentLoaded', function () {
     editProfileForm.addEventListener('submit', handleProfileUpdate);
     addUserBtn.addEventListener('click', () => addUserModal.show());
     userListUl.addEventListener('click', (e) => { if (e.target.classList.contains('btn-delete-user')) handleDeleteUser(parseInt(e.target.dataset.id)); });
-    
-    document.getElementById('buscar-mentores-section').addEventListener('click', (e) => {
-        const viewProfileBtn = e.target.closest('.btn-view-profile');
-        if (viewProfileBtn) {
-            showMentorProfile(parseInt(viewProfileBtn.dataset.id));
-        }
-    });
-    
+
+    document.getElementById('mentors-list-container').addEventListener('click', (e) => { const btn = e.target.closest('.btn-view-profile'); if (btn) showMentorProfile(parseInt(btn.dataset.id)); });
+    document.getElementById('recommended-mentors-container').addEventListener('click', (e) => { const btn = e.target.closest('.btn-view-profile'); if (btn) showMentorProfile(parseInt(btn.dataset.id)); });
+    document.getElementById('featured-mentors-container').addEventListener('click', (e) => { const btn = e.target.closest('.btn-view-profile'); if (btn) showMentorProfile(parseInt(btn.dataset.id)); });
+
     requestMentorshipBtn.addEventListener('click', (e) => {
         document.getElementById('mentorship-mentor-id').value = parseInt(e.target.dataset.mentorId);
         viewProfileModal.hide();
@@ -1041,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function () {
     composeMessageForm.addEventListener('submit', handleSendMessage);
     conversationsListUl.addEventListener('click', (e) => { const item = e.target.closest('[data-conversation-with]'); if(item) openConversationThread(parseInt(item.dataset.conversationWith)); });
     replyMessageForm.addEventListener('submit', handleReplyMessage);
-    
+
     document.getElementById('agendamento-card-body').addEventListener('click', (e) => {
         const target = e.target.closest('[data-action]');
         if (target) {
@@ -1049,7 +887,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const id = parseInt(target.dataset.id);
             if (action === 'avaliar') {
                 const appointment = appointments.find(a => a.id === id);
-                const mentor = users.find(u => u.id === appointment.mentor_id);
+                const mentor = users.find(u => u.id === appointment.mentorId);
                 document.getElementById('feedback-appointment-id').value = id;
                 document.getElementById('feedback-mentor-name').textContent = mentor.name;
                 feedbackStarsContainer.dataset.rating = 0;
@@ -1090,6 +928,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (topicLink) { e.preventDefault(); openTopic(parseInt(topicLink.dataset.topicId)); }
     });
     replyTopicForm.addEventListener('submit', handleReplyToTopic);
-    
-    init();
-});
+
+    function init() {
+        if (users.length === 0) {
+            users.push({ id: 1, name: 'Admin', email: 'admin@mentoring.com', password: 'admin', role: 'admin', course: 'Sistema', gender: 'outro', skills: ['Gerenciamento'], bio: '', availability: '' });
+            saveUsers();
+        }
+        if (currentUser) {
+            authWrapper.classList.add('d-none');
+            appWrapper.classList.remove('d-none');
+            appWrapper.classList.add('d-flex');
+            updateDashboardUI(currentUser);
+        } else {
+            authWrapper.classList.remove('d-none');
+            appWrapper.classList.add('d-none');
+        }
+    }
+
+
+
+}
+init();
