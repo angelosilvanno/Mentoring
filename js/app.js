@@ -959,9 +959,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("Iniciando busca de dados da API...");
             const [usersRes, appointmentsRes, messagesRes, forumTopicsRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/users`),
-                fetch(`${API_BASE_URL}/appointments`),
+                fetch(`${API_BASE_URL}/appointments?user_id=${currentUser.id}`),
                 fetch(`${API_BASE_URL}/messages`),
-                fetch(`${API_BASE_URL}/forumTopics`)
+                fetch(`${API_BASE_URL}/forum`)
             ]);
 
             console.log("Status da Resposta - Users:", usersRes.status, usersRes.statusText);
