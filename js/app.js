@@ -740,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showRegisterFormView() {
-        document.getElementById('admin-register-option').hidden = users.some(user => user.role === 'admin');
+        document.getElementById('admin-register-option').hidden = false;
         loginContainer.classList.add('d-none');
         registerSection.classList.remove('d-none');
     }
