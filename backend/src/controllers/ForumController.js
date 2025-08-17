@@ -1,3 +1,4 @@
+// src/controllers/ForumController.js
 const connection = require('../database/connection');
 
 module.exports = {
@@ -11,8 +12,7 @@ module.exports = {
       
       return response.json(topics);
     } catch (error) {
-      console.error("Erro ao buscar tópicos:", error);
-      return response.status(500).json({ error: "Ocorreu um erro interno." });
+      return response.status(500).json({ error: "Erro ao buscar tópicos." });
     }
   },
 
@@ -23,8 +23,7 @@ module.exports = {
       const [topic] = await connection('forum_topics').insert({ author_id, title, body }).returning('*');
       return response.status(201).json(topic);
     } catch (error) {
-      console.error("Erro ao criar tópico:", error);
-      return response.status(500).json({ error: "Ocorreu um erro ao criar o tópico." });
+      return response.status(500).json({ error: "Erro ao criar o tópico." });
     }
   },
 
@@ -32,12 +31,7 @@ module.exports = {
   async showTopic(request, response) {
     const { id } = request.params;
     try {
-      const topic = await connection('forum_topics')
-        .where('forum_topics.id', id)
-        .join('users', 'users.id', '=', 'forum_topics.author_id')
-        .select('forum_topics.*', 'users.name as author_name')
-        .first();
-
+      const topic = await connection('forum_topics').where('id', id).first();
       if (!topic) {
         return response.status(404).json({ error: 'Tópico não encontrado.' });
       }
@@ -50,8 +44,7 @@ module.exports = {
 
       return response.json({ ...topic, replies });
     } catch (error) {
-      console.error("Erro ao buscar tópico:", error);
-      return response.status(500).json({ error: "Ocorreu um erro interno." });
+      return response.status(500).json({ error: "Erro ao buscar tópico." });
     }
   },
 
@@ -63,8 +56,7 @@ module.exports = {
       const [reply] = await connection('topic_replies').insert({ topic_id, author_id, body }).returning('*');
       return response.status(201).json(reply);
     } catch (error) {
-      console.error("Erro ao criar resposta:", error);
-      return response.status(500).json({ error: "Ocorreu um erro ao criar a resposta." });
+      return response.status(500).json({ error: "Erro ao criar a resposta." });
     }
   }
 };

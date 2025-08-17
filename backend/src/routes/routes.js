@@ -5,6 +5,7 @@ const UserController = require('../controllers/UserController');
 const SessionController = require('../controllers/SessionController');
 const AppointmentController = require('../controllers/AppointmentController');
 const ForumController = require('../controllers/ForumController');
+const MessageController = require('../controllers/MessageController');
 
 const routes = express.Router();
 
@@ -12,7 +13,7 @@ const routes = express.Router();
 routes.post('/login', SessionController.create);
 routes.get('/users', UserController.index);
 routes.post('/users', UserController.create);
-// Adicionar rotas para /users/:id (PATCH para editar, DELETE para remover)
+
 
 // --- Rotas de Agendamentos ---
 routes.get('/appointments', AppointmentController.index);      // Buscar agendamentos de um usuário
@@ -25,5 +26,10 @@ routes.get('/forum', ForumController.indexTopics);           // Listar todos os 
 routes.post('/forum', ForumController.createTopic);          // Criar novo tópico
 routes.get('/forum/:id', ForumController.showTopic);         // Ver um tópico e suas respostas
 routes.post('/forum/:id/replies', ForumController.createReply); // Adicionar uma resposta
+
+// --- Rotas de Mensagens ---
+routes.get('/messages', MessageController.index);
+routes.post('/messages', MessageController.create);
+
 
 module.exports = routes;
