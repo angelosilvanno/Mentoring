@@ -3,8 +3,8 @@ module.exports = {
     client: 'pg', 
     connection: {
       host: '127.0.0.1', 
-      user: 'seu_usuario_aqui',      
-      password: 'sua_senha_aqui', 
+      user: 'postgres',      
+      password: 'angelosilvano', 
       database: 'mentoring_db' 
     },
     migrations: {
