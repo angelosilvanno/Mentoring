@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 course: userData.course, 
                 role: userData.role, 
                 gender: userData.gender,
-                skills: [], // Inicializa campos vazios
+                skills: [], 
                 bio: '', 
                 availability: '' 
             };
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(data.error || 'Não foi possível adicionar o usuário.');
             }
             
-            users.push(data); // Adiciona localmente para evitar nova requisição
+            users.push(data);
             showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
             addUserForm.reset();
             addUserModal.hide();
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const historyList = document.getElementById('modal-mentor-history-list');
         historyList.innerHTML = '';
-        const completedAppointments = appointments.filter(a => a.mentor_id === mentorId && (a.status === 'realizado' || a.status === 'avaliado')).sort((a,b) => new Date(b.date) - new Date(a.date));
+        const completedAppointments = appointments.filter(a => a.mentor_id === mentorId && (a.status === 'realizado' || a.status === 'avaliado')).sort((a,b) => new Date(b.appointment_date) - new Date(a.appointment_date));
         if (completedAppointments.length > 0) {
             completedAppointments.forEach(app => {
                 const mentee = users.find(u => u.id === app.mentee_id);
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const newAppointment = { 
             mentor_id: mentorId, 
             mentee_id: currentUser.id, 
-            appointment_date: `${date}T${time}:00Z`, // Formato ISO 8601
+            appointment_date: `${date}T${time}:00Z`,
             topic
         };
         try {
@@ -755,8 +755,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (appointmentIndex === -1) return;
 
         const updatedData = {
-            date: document.getElementById('edit-appointment-date').value,
-            time: document.getElementById('edit-appointment-time').value,
             topic: document.getElementById('edit-appointment-topic').value,
             appointment_date: `${document.getElementById('edit-appointment-date').value}T${document.getElementById('edit-appointment-time').value}:00Z`
         };
@@ -921,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 day: 'dia',
                 list: 'lista' 
             },
-            allDayText: 'Dia',
+            allDayText: 'Dia inteiro',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -958,12 +956,18 @@ document.addEventListener('DOMContentLoaded', function () {
     async function loadInitialData() {
         if (!currentUser) return initializeAppUI();
         try {
+            console.log("Iniciando busca de dados da API...");
             const [usersRes, appointmentsRes, messagesRes, forumTopicsRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/users`),
                 fetch(`${API_BASE_URL}/appointments`),
                 fetch(`${API_BASE_URL}/messages`),
                 fetch(`${API_BASE_URL}/forumTopics`)
             ]);
+
+            console.log("Status da Resposta - Users:", usersRes.status, usersRes.statusText);
+            console.log("Status da Resposta - Appointments:", appointmentsRes.status, appointmentsRes.statusText);
+            console.log("Status da Resposta - Messages:", messagesRes.status, messagesRes.statusText);
+            console.log("Status da Resposta - ForumTopics:", forumTopicsRes.status, forumTopicsRes.statusText);
 
             if (!usersRes.ok || !appointmentsRes.ok || !messagesRes.ok || !forumTopicsRes.ok) {
                 throw new Error('Falha ao buscar dados essenciais da aplicação.');
@@ -973,11 +977,13 @@ document.addEventListener('DOMContentLoaded', function () {
             appointments = await appointmentsRes.json();
             messages = await messagesRes.json();
             forumTopics = await forumTopicsRes.json();
+            
+            console.log("Dados carregados com sucesso:", { users, appointments, messages, forumTopics });
 
             initializeAppUI();
 
         } catch (error) {
-            console.error("Falha ao carregar dados da API:", error);
+            console.error("Falha detalhada ao carregar dados da API:", error);
             showToast("Não foi possível conectar ao servidor. Verifique se o backend está rodando e tente recarregar a página.", "danger");
         }
     }
