@@ -4,7 +4,6 @@ const connection = require('../database/connection');
 const bcrypt = require('bcrypt');
 
 module.exports = {
-  // Função para listar todos os usuários (a que já tínhamos)
   async index(request, response) {
     try {
       const users = await connection('users').select('*');
@@ -15,7 +14,6 @@ module.exports = {
     }
   },
 
-  // Função para CRIAR um novo usuário (Cadastro)
   async create(request, response) {
     const { name, username, email, password, role, course, gender, skills, bio, availability } = request.body;
 
@@ -24,31 +22,32 @@ module.exports = {
     }
 
     try {
-      // Verifica se o email já existe
       const userExists = await connection('users').where('email', email).first();
       if (userExists) {
         return response.status(400).json({ error: "Este e-mail já está em uso." });
       }
 
-      // Gera o hash da senha
       const saltRounds = 10;
       const password_hash = await bcrypt.hash(password, saltRounds);
 
-      // Insere o novo usuário no banco
-      await connection('users').insert({
+      // CORREÇÃO: Converte o array de skills para o formato que o PostgreSQL espera: '{skill1,skill2}'
+      const skills_for_db = skills && skills.length > 0 ? `{${skills.join(',')}}` : null;
+
+      const [newUser] = await connection('users').insert({
         name,
-        username,
+        // CORREÇÃO: Garante que o username seja nulo se estiver vazio, para não violar a restrição UNIQUE
+        username: username || null,
         email,
-        password_hash, // Salva o hash, não a senha
+        password_hash,
         role,
         course,
         gender,
-        skills,
+        skills: skills_for_db,
         bio,
         availability
-      });
+      }).returning('*'); // Retorna o usuário criado
 
-      return response.status(201).json({ message: "Usuário criado com sucesso!" });
+      return response.status(201).json(newUser); // Devolve o usuário completo
     } catch (error) {
       console.error("Erro ao criar usuário:", error);
       return response.status(500).json({ error: "Ocorreu um erro ao criar o usuário." });
