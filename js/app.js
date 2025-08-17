@@ -190,8 +190,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 password: userData.password, 
                 course: userData.course, 
                 role: userData.role, 
-                gender: userData.gender, 
-                skills: [], 
+                gender: userData.gender,
+                skills: [], // Inicializa campos vazios
                 bio: '', 
                 availability: '' 
             };
@@ -259,8 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function buildMentorCard(mentor) {
-        // Esta função não precisa mudar, pois já usa os dados carregados na variável 'appointments'
+    function buildMentorCard(mentor, isHorizontal = false) {
         const allRatings = appointments.filter(a => a.mentor_id === mentor.id && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
         const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
         const ratingHTML = averageRating > 0 ?
@@ -272,8 +271,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const skillBadges = mentor.skills ? mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('') : '';
         
-        return `
-            <div class="col-md-6 col-lg-4">
+        const cardClass = isHorizontal ? 'mentor-card-horizontal' : 'col-md-6 col-lg-4';
+        const cardStructure = `
+            <div class="${cardClass}">
                 <div class="card mentor-card h-100 shadow-sm text-center">
                     <div class="card-body d-flex flex-column">
                         <img src="${getAvatarUrl(mentor)}" class="rounded-circle mb-3 mx-auto" style="width: 90px; height: 90px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
@@ -288,102 +288,562 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
         `;
+        return cardStructure;
     }
 
     function renderRecommendedMentors() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        const container = document.getElementById('recommended-mentors-container');
+        container.innerHTML = '';
+        const recommended = users.filter(user => user.role === 'mentor' && user.course === currentUser.course && user.id !== currentUser.id).slice(0, 5);
+        
+        if(recommended.length > 0) {
+            recommended.forEach(mentor => container.innerHTML += buildMentorCard(mentor, true));
+        } else {
+            container.innerHTML = '<p class="text-muted">Não encontramos mentores do seu curso no momento.</p>';
+        }
     }
     
     function renderFeaturedMentors() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        const container = document.getElementById('featured-mentors-container');
+        container.innerHTML = '';
+        const mentorsWithRatings = users
+            .filter(user => user.role === 'mentor')
+            .map(mentor => {
+                const allRatings = appointments.filter(a => a.mentor_id === mentor.id && a.feedback?.rating).map(a => a.feedback.rating);
+                const averageRating = allRatings.length > 0 ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 0;
+                return { ...mentor, averageRating, ratingCount: allRatings.length };
+            })
+            .filter(mentor => mentor.ratingCount > 0)
+            .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount)
+            .slice(0, 3);
+
+        if(mentorsWithRatings.length > 0) {
+            mentorsWithRatings.forEach(mentor => container.innerHTML += buildMentorCard(mentor, false));
+        } else {
+            container.innerHTML = '<div class="col"><p class="text-muted">Ainda não há mentores com avaliações para destacar.</p></div>';
+        }
     }
 
     function renderMentorList(filter = '') {
-        // Não precisa mudar, pois já usa as variáveis globais
+        const lowercasedFilter = filter.trim().toLowerCase();
+
+        if (!lowercasedFilter) {
+            mentorsListContainer.innerHTML = `<div class="col-12 text-center p-5 text-muted">
+                <i class="bi bi-keyboard fs-1"></i>
+                <h5 class="mt-3">Comece a digitar para buscar</h5>
+                <p>Use o campo acima para encontrar mentores por nome ou habilidade.</p>
+            </div>`;
+            return;
+        }
+
+        const mentors = users.filter(user => user.role === 'mentor');
+        const filteredMentors = mentors.filter(mentor =>
+            mentor.name.toLowerCase().includes(lowercasedFilter) ||
+            (mentor.skills && mentor.skills.some(skill => skill.toLowerCase().includes(lowercasedFilter)))
+        );
+
+        mentorsListContainer.innerHTML = '';
+
+        if (filteredMentors.length === 0) {
+            mentorsListContainer.innerHTML = `<div class="col-12 text-center p-5 text-muted">
+                <i class="bi bi-emoji-frown fs-1"></i>
+                <h5 class="mt-3">Nenhum mentor encontrado</h5>
+                <p>Tente ajustar seus termos de busca.</p>
+            </div>`;
+            return;
+        }
+
+        filteredMentors.forEach(mentor => {
+            mentorsListContainer.innerHTML += buildMentorCard(mentor);
+        });
     }
 
     function renderPopularTags() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        if (!popularTagsContainer) return;
+        const allSkills = users.filter(u => u.role === 'mentor' && u.skills).flatMap(u => u.skills);
+        const skillCounts = allSkills.reduce((acc, skill) => { acc[skill] = (acc[skill] || 0) + 1; return acc; }, {});
+        const popularSkills = Object.entries(skillCounts).sort(([,a],[,b]) => b - a).slice(0, 5).map(([skill]) => skill);
+        popularTagsContainer.innerHTML = '';
+        if (popularSkills.length === 0) {
+            popularTagsContainer.innerHTML = '<p class="text-muted small">Nenhuma categoria popular.</p>';
+            return;
+        }
+        popularSkills.forEach(skill => {
+            const badge = document.createElement('button');
+            badge.className = 'btn btn-light border me-2 mb-2';
+            badge.textContent = skill;
+            badge.onclick = () => {
+                searchMentorInput.value = skill;
+                renderMentorList(skill);
+            };
+            popularTagsContainer.appendChild(badge);
+        });
     }
 
     function renderDiscoveryPage() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        renderRecommendedMentors();
+        renderFeaturedMentors();
+        renderPopularTags();
+        renderMentorList(); 
     }
     
     function renderAdminDashboard() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        const manageableUsers = users.filter(u => u.role !== 'admin');
+        const adminUsers = users.filter(u => u.role === 'admin');
+    
+        document.getElementById('total-users-stat').textContent = manageableUsers.length;
+        document.getElementById('total-mentors-stat').textContent = manageableUsers.filter(u => u.role === 'mentor').length;
+        document.getElementById('total-mentees-stat').textContent = manageableUsers.filter(u => u.role === 'mentee').length;
+        document.getElementById('total-admins-stat').textContent = adminUsers.length;
+        
+        renderUserListForAdmin();
     }
 
     function renderUserListForAdmin() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        userListUl.innerHTML = '';
+        const usersToDisplay = users.filter(user => user.role !== 'admin');
+        if (usersToDisplay.length === 0) {
+            userListUl.innerHTML = '<li class="list-group-item">Nenhum mentor ou mentee registrado.</li>'; return;
+        }
+        usersToDisplay.forEach(user => {
+            const roleBadgeColor = user.role === 'mentor' ? 'bg-success' : 'bg-info';
+            userListUl.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center gap-3"><img src="${getAvatarUrl(user)}" class="rounded-circle" style="width: 40px; height: 40px; background-color: #f0f0f0;"><div><strong>${user.name}</strong><small class="d-block text-muted">${user.email}</small></div></div><div><span class="badge ${roleBadgeColor} me-3">${user.role}</span><button class="btn btn-sm btn-outline-danger btn-delete-user" data-id="${user.id}">Remover</button></div></li>`;
+        });
     }
 
     async function handleDeleteUser(userId) {
-        // Implementação com fetch
+        if (!currentUser || currentUser.role !== 'admin') return;
+        const userToDelete = users.find(user => user.id === userId);
+        if (userToDelete && userToDelete.role === 'admin') return;
+
+        showConfirm(
+            'Excluir Usuário', 
+            `Tem certeza que deseja remover ${userToDelete.name}? Esta ação não pode ser desfeita.`, 
+            async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/users/${userId}`, { method: 'DELETE' });
+                    if (!response.ok) throw new Error('Falha ao remover o usuário.');
+                    
+                    users = users.filter(user => user.id !== userId);
+                    renderAdminDashboard();
+                    showToast(`Usuário ${userToDelete.name} removido com sucesso.`, 'success');
+                } catch (error) {
+                    console.error("Erro ao deletar usuário:", error);
+                    showToast('Não foi possível remover o usuário. Tente novamente.', 'danger');
+                }
+            }
+        );
     }
 
     async function handleProfileUpdate(e) {
-        // Implementação com fetch
+        e.preventDefault();
+        const updatedProfile = {
+            name: document.getElementById('edit-name').value,
+            bio: document.getElementById('edit-bio').value,
+            skills: document.getElementById('edit-skills').value.split(',').map(skill => skill.trim()).filter(Boolean),
+            availability: document.getElementById('edit-availability').value
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${currentUser.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedProfile)
+            });
+            if (!response.ok) throw new Error('Falha ao atualizar o perfil.');
+
+            const updatedUser = await response.json();
+            
+            Object.assign(currentUser, updatedUser);
+            const userIndex = users.findIndex(user => user.id === currentUser.id);
+            if (userIndex !== -1) users[userIndex] = currentUser;
+
+            setCurrentUser(currentUser);
+            showToast('Perfil atualizado com sucesso!', 'success');
+            editProfileModal.hide();
+            updateDashboardUI(currentUser);
+        } catch (error) {
+            console.error("Erro ao atualizar perfil:", error);
+            showToast('Não foi possível atualizar o perfil. Tente novamente.', 'danger');
+        }
+    }
+
+    function buildReviewCard(review) {
+        const mentee = users.find(u => u.id === review.mentee_id);
+        if (!mentee) return '';
+
+        let starsHTML = '';
+        for (let i = 0; i < 5; i++) {
+            starsHTML += `<i class="bi ${i < review.feedback.rating ? 'bi-star-fill text-warning' : 'bi-star'}"></i>`;
+        }
+
+        return `
+            <div class="card mb-2">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle me-2" style="width:30px; height:30px;">
+                        <strong class="me-auto">${mentee.name}</strong>
+                        <div class="text-nowrap">${starsHTML}</div>
+                    </div>
+                    <p class="card-text fst-italic mb-0">"${review.feedback.comment || 'Nenhum comentário fornecido.'}"</p>
+                </div>
+            </div>
+        `;
     }
 
     function showMentorProfile(mentorId) {
-        // Não precisa mudar, pois já usa as variáveis globais
+        const mentor = users.find(user => user.id === mentorId);
+        if (!mentor) return;
+
+        const allRatings = appointments.filter(a => a.mentor_id === mentorId && a.feedback && a.feedback.rating).map(a => a.feedback.rating);
+        const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : 0;
+        
+        document.getElementById('modal-profile-avatar').src = getAvatarUrl(mentor);
+        document.getElementById('modal-profile-name').textContent = mentor.name;
+        document.getElementById('modal-profile-course').textContent = mentor.course;
+        
+        const ratingContainer = document.getElementById('modal-profile-rating');
+        if (allRatings.length > 0) {
+            ratingContainer.innerHTML = `
+                <span class="d-flex align-items-center justify-content-center">
+                    <i class="bi bi-star-fill text-warning me-1"></i> 
+                    <strong>${averageRating}</strong> 
+                    <span class="text-muted ms-1">(${allRatings.length} ${allRatings.length > 1 ? 'avaliações' : 'avaliação'})</span>
+                </span>`;
+        } else {
+            ratingContainer.innerHTML = '<span class="badge text-bg-secondary">Ainda não avaliado</span>';
+        }
+
+        document.getElementById('modal-profile-bio').textContent = mentor.bio || 'Este mentor ainda não adicionou uma biografia.';
+        const skillsContainer = document.getElementById('modal-profile-skills');
+        skillsContainer.innerHTML = '';
+        if (mentor.skills && mentor.skills.length > 0) {
+            mentor.skills.forEach(skill => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary me-2 mb-2 p-2';
+                badge.textContent = skill;
+                skillsContainer.appendChild(badge);
+            });
+        } else {
+            skillsContainer.innerHTML = '<p class="text-muted">Nenhuma habilidade informada.</p>';
+        }
+
+        const historyList = document.getElementById('modal-mentor-history-list');
+        historyList.innerHTML = '';
+        const completedAppointments = appointments.filter(a => a.mentor_id === mentorId && (a.status === 'realizado' || a.status === 'avaliado')).sort((a,b) => new Date(b.date) - new Date(a.date));
+        if (completedAppointments.length > 0) {
+            completedAppointments.forEach(app => {
+                const mentee = users.find(u => u.id === app.mentee_id);
+                historyList.innerHTML += `<li class="list-group-item small p-2">"${app.topic}" com ${mentee ? mentee.name : 'aluno'} em ${new Date(app.appointment_date).toLocaleDateString()}</li>`;
+            });
+        } else {
+            historyList.innerHTML = '<li class="list-group-item small text-muted p-2">Nenhum encontro finalizado.</li>';
+        }
+
+        const reviewsContainer = document.getElementById('modal-mentor-reviews-list');
+        reviewsContainer.innerHTML = '';
+        const reviewedAppointments = appointments.filter(a => a.mentor_id === mentorId && a.status === 'avaliado' && a.feedback);
+        if (reviewedAppointments.length > 0) {
+            reviewedAppointments.forEach(app => {
+                reviewsContainer.innerHTML += buildReviewCard(app);
+            });
+        } else {
+            reviewsContainer.innerHTML = '<div class="text-center p-4 text-muted">Este mentor ainda não recebeu avaliações.</div>';
+        }
+
+        sendMessageFromProfileBtn.style.display = 'none';
+        requestMentorshipBtn.style.display = 'none';
+        if (currentUser.role === 'mentee') {
+            sendMessageFromProfileBtn.style.display = 'inline-block';
+            requestMentorshipBtn.style.display = 'inline-block';
+        }
+        requestMentorshipBtn.dataset.mentorId = mentor.id;
+        sendMessageFromProfileBtn.dataset.mentorId = mentor.id;
+        
+        const firstTab = new bootstrap.Tab(document.getElementById('about-tab'));
+        firstTab.show();
+
+        viewProfileModal.show();
     }
 
     async function handleRequestMentorshipSubmit(e) {
-        // Implementação com fetch
+        e.preventDefault();
+        const mentorId = parseInt(document.getElementById('mentorship-mentor-id').value, 10);
+        const date = document.getElementById('mentorship-date').value;
+        const time = document.getElementById('mentorship-time').value;
+        const topic = document.getElementById('mentorship-topic').value;
+        if (!mentorId || !date || !time || !topic) { showToast("Preencha todos os campos.", 'warning'); return; }
+        
+        const newAppointment = { 
+            mentor_id: mentorId, 
+            mentee_id: currentUser.id, 
+            appointment_date: `${date}T${time}:00Z`, // Formato ISO 8601
+            topic
+        };
+        try {
+            const response = await fetch(`${API_BASE_URL}/appointments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newAppointment)
+            });
+            if (!response.ok) throw new Error('Não foi possível agendar o encontro.');
+
+            const createdAppointment = await response.json();
+            appointments.push(createdAppointment);
+            showToast('Solicitação de agendamento enviada!', 'success');
+            requestMentorshipModal.hide();
+        } catch (error) {
+            console.error("Erro no agendamento:", error);
+            showToast('Ocorreu um erro ao enviar a solicitação.', 'danger');
+        }
     }
 
     function renderAppointments() {
-        // Não precisa mudar, pois já usa as variáveis globais
+        if (currentUser.role === 'mentee') {
+            initCalendar();
+        } else if (currentUser.role === 'mentor') {
+            const upcomingList = document.getElementById('upcoming-appointments-list');
+            const pastList = document.getElementById('past-appointments-list');
+            upcomingList.innerHTML = '';
+            pastList.innerHTML = '';
+    
+            const myAppointments = appointments.filter(a => a.mentor_id === currentUser.id);
+            const now = new Date();
+    
+            const upcoming = myAppointments.filter(a => new Date(a.appointment_date) >= now && ['pendente', 'aceito'].includes(a.status));
+            const past = myAppointments.filter(a => new Date(a.appointment_date) < now || ['recusado', 'realizado', 'avaliado'].includes(a.status));
+            
+            const completedCount = past.filter(a => ['realizado', 'avaliado'].includes(a.status)).length;
+            const menteesMet = new Set(past.map(a => a.mentee_id)).size;
+    
+            const sortedUpcoming = [...upcoming].sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date));
+            const nextAppointment = sortedUpcoming[0];
+    
+            document.getElementById('mentor-stats-total').textContent = completedCount;
+            document.getElementById('mentor-stats-mentees').textContent = menteesMet;
+            if (nextAppointment) {
+                const nextDate = new Date(nextAppointment.appointment_date);
+                const today = new Date();
+                const tomorrow = new Date();
+                tomorrow.setDate(today.getDate() + 1);
+
+                if (nextDate.toDateString() === today.toDateString()) {
+                    document.getElementById('mentor-stats-next').textContent = `Hoje às ${nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                } else if (nextDate.toDateString() === tomorrow.toDateString()) {
+                    document.getElementById('mentor-stats-next').textContent = `Amanhã às ${nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                } else {
+                    document.getElementById('mentor-stats-next').textContent = nextDate.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
+                }
+            } else {
+                document.getElementById('mentor-stats-next').textContent = 'Nenhum';
+            }
+    
+            if (sortedUpcoming.length === 0) {
+                upcomingList.innerHTML = '<div class="text-center p-4 text-muted">Nenhuma solicitação ou encontro futuro.</div>';
+            } else {
+                sortedUpcoming.forEach(a => upcomingList.innerHTML += buildAppointmentCard(a));
+            }
+    
+            if (past.length === 0) {
+                pastList.innerHTML = '<div class="text-center p-4 text-muted">Nenhum encontro no seu histórico.</div>';
+            } else {
+                past.sort((a,b) => new Date(b.appointment_date) - new Date(a.appointment_date)).forEach(a => pastList.innerHTML += buildAppointmentCard(a));
+            }
+        }
     }
     
     function buildAppointmentCard(appointment) {
-        // Não precisa mudar, pois já usa as variáveis globais
+        const otherUser = users.find(u => u.id === appointment.mentee_id);
+        if (!otherUser) return '';
+        
+        let statusBadge, actions = '';
+        const appointmentDate = new Date(appointment.appointment_date);
+        const isPast = appointmentDate < new Date();
+        
+        switch (appointment.status) {
+            case 'pendente':
+                statusBadge = `<span class="badge text-bg-warning">Pendente</span>`;
+                actions = `<button class="btn btn-success btn-sm me-2" data-action="aceito" data-id="${appointment.id}">Aceitar</button><button class="btn btn-danger btn-sm" data-action="recusado" data-id="${appointment.id}">Recusar</button>`;
+                break;
+            case 'aceito':
+                statusBadge = `<span class="badge text-bg-success">Aceito</span>`;
+                if (isPast) {
+                    actions = `<button class="btn btn-primary btn-sm" data-action="realizado" data-id="${appointment.id}">Marcar como Realizado</button>`;
+                } else {
+                    actions = `<button class="btn btn-outline-secondary btn-sm me-2" data-action="editar" data-id="${appointment.id}">Editar</button><button class="btn btn-outline-danger btn-sm" data-action="excluir" data-id="${appointment.id}">Excluir</button>`;
+                }
+                break;
+            case 'recusado': statusBadge = `<span class="badge text-bg-danger">Recusado</span>`; break;
+            case 'realizado': statusBadge = `<span class="badge text-bg-info">Realizado</span>`; break;
+            case 'avaliado': statusBadge = `<span class="badge text-bg-secondary">Avaliado</span>`; break;
+        }
+
+        return `
+            <div class="card appointment-card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="${getAvatarUrl(otherUser)}" class="rounded-circle me-3" style="width:45px; height:45px;" alt="">
+                        <div>
+                            <h6 class="mb-0">Mentoria com <strong>${otherUser.name}</strong></h6>
+                            <small class="text-muted">${appointmentDate.toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: 'long'})} às ${appointmentDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                        </div>
+                        <div class="ms-auto">${statusBadge}</div>
+                    </div>
+                    <p class="card-text bg-light p-2 rounded"><strong>Tópico:</strong> ${appointment.topic}</p>
+                    <div class="text-end">
+                        ${actions}
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     async function handleAppointmentAction(action, id) {
-        // Implementação com fetch
+        const appointmentIndex = appointments.findIndex(a => a.id === id);
+        if (appointmentIndex === -1) return;
+        
+        if (action === 'excluir') {
+            const mentee = users.find(u => u.id === appointments[appointmentIndex].mentee_id);
+            showConfirm(
+                'Excluir Agendamento',
+                `Tem certeza que deseja excluir este agendamento? Uma notificação será enviada para ${mentee.name}.`,
+                async () => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/appointments/${id}`, { method: 'DELETE' });
+                        if (!response.ok) throw new Error('Falha ao excluir agendamento.');
+                        appointments.splice(appointmentIndex, 1);
+                        showToast('Agendamento excluído com sucesso.', 'success');
+                        renderAppointments();
+                    } catch (error) {
+                        console.error("Erro ao excluir:", error);
+                        showToast('Não foi possível excluir o agendamento.', 'danger');
+                    }
+                }
+            );
+        } else if (action === 'editar') {
+            const appointment = appointments[appointmentIndex];
+            const appDate = new Date(appointment.appointment_date);
+            document.getElementById('edit-appointment-id').value = appointment.id;
+            document.getElementById('edit-appointment-date').value = appDate.toISOString().split('T')[0];
+            document.getElementById('edit-appointment-time').value = appDate.toTimeString().split(' ')[0].substring(0, 5);
+            document.getElementById('edit-appointment-topic').value = appointment.topic;
+            editAppointmentModal.show();
+            return;
+        } else {
+            try {
+                const response = await fetch(`${API_BASE_URL}/appointments/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: action })
+                });
+                if (!response.ok) throw new Error('Falha ao atualizar status.');
+                
+                appointments[appointmentIndex].status = action;
+                renderAppointments();
+            } catch (error) {
+                console.error("Erro ao atualizar status:", error);
+                showToast('Não foi possível atualizar o status do agendamento.', 'danger');
+            }
+        }
     }
     
     async function handleUpdateAppointment(e) {
-        // Implementação com fetch
+        e.preventDefault();
+        const id = parseInt(document.getElementById('edit-appointment-id').value);
+        const shouldNotify = document.getElementById('edit-notify-mentee').checked;
+        const appointmentIndex = appointments.findIndex(a => a.id === id);
+        if (appointmentIndex === -1) return;
+
+        const updatedData = {
+            date: document.getElementById('edit-appointment-date').value,
+            time: document.getElementById('edit-appointment-time').value,
+            topic: document.getElementById('edit-appointment-topic').value,
+            appointment_date: `${document.getElementById('edit-appointment-date').value}T${document.getElementById('edit-appointment-time').value}:00Z`
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/appointments/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+            if (!response.ok) throw new Error('Falha ao atualizar o agendamento.');
+
+            Object.assign(appointments[appointmentIndex], updatedData);
+            
+            editAppointmentModal.hide();
+            editAppointmentForm.reset();
+            showToast(`Agendamento atualizado com sucesso!${shouldNotify ? ' O mentorado foi notificado.' : ''}`, 'success');
+            renderAppointments();
+        } catch (error) {
+            console.error("Erro ao atualizar agendamento:", error);
+            showToast('Não foi possível atualizar o agendamento.', 'danger');
+        }
     }
 
     async function handleFeedbackSubmit(e) {
-        // Implementação com fetch
+        e.preventDefault();
+        const appointmentId = parseInt(document.getElementById('feedback-appointment-id').value);
+        const rating = parseInt(feedbackStarsContainer.dataset.rating || '0');
+        const comment = document.getElementById('feedback-comment').value;
+        if (rating === 0) { showToast('Por favor, selecione uma avaliação de 1 a 5 estrelas.', 'warning'); return; }
+        const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+        if (appointmentIndex === -1) return;
+
+        const feedbackData = {
+            status: 'avaliado',
+            feedback: { rating, comment, date: new Date().toISOString() }
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(feedbackData)
+            });
+            if (!response.ok) throw new Error('Falha ao enviar avaliação.');
+
+            Object.assign(appointments[appointmentIndex], feedbackData);
+            
+            showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
+            feedbackModal.hide();
+            renderAppointments();
+        } catch (error) {
+            console.error("Erro ao enviar feedback:", error);
+            showToast('Não foi possível enviar a avaliação.', 'danger');
+        }
     }
 
     function renderConversations() {
-        // Lógica de renderização de conversas (a ser implementada com API)
+        // Implementar com API
     }
 
     function openConversationThread(otherUserId) {
-        // Lógica para abrir thread de conversa (a ser implementada com API)
+        // Implementar com API
     }
 
     async function handleSendMessage(e) {
-        // Implementação com fetch
+        // Implementar com API
     }
 
     async function handleReplyMessage(e) {
-        // Implementação com fetch
+        // Implementar com API
     }
 
     function renderForumTopics() {
-        // Lógica de renderização do fórum (a ser implementada com API)
+        // Implementar com API
     }
 
     async function handleCreateTopic(e) {
-        // Implementação com fetch
+        // Implementar com API
     }
 
     function openTopic(topicId) {
-        // Lógica para abrir tópico (a ser implementada com API)
+        // Implementar com API
     }
 
     async function handleReplyToTopic(e) {
-        // Implementação com fetch
+        // Implementar com API
     }
     
     function showLoginFormView() {
@@ -425,11 +885,62 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function formatAppointmentsForCalendar(myAppointments) {
-        // Não precisa mudar
+        return myAppointments.map(app => {
+            const otherUser = users.find(u => u.id === (currentUser.role === 'mentee' ? app.mentor_id : app.mentee_id));
+            let color = '#0d6efd';
+            if (app.status === 'pendente') color = '#ffc107';
+            if (app.status === 'aceito') color = '#198754';
+            if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
+            
+            return {
+                id: app.id,
+                title: `Mentoria com ${otherUser ? otherUser.name : '...'}`,
+                start: app.appointment_date,
+                color: color,
+                extendedProps: {
+                    topic: app.topic,
+                    status: app.status
+                }
+            };
+        });
     }
 
     function initCalendar() {
-        // Não precisa mudar
+        if (calendar) {
+            calendar.destroy();
+        }
+        const myAppointments = appointments.filter(a => a.mentee_id === currentUser.id || a.mentor_id === currentUser.id);
+        const calendarEvents = formatAppointmentsForCalendar(myAppointments);
+
+        calendar = new FullCalendar.Calendar(calendarContainer, {
+            locale: 'pt-br',
+            buttonText: {
+                today: 'hoje',
+                month: 'mês',
+                week: 'semana',
+                day: 'dia',
+                list: 'lista' 
+            },
+            allDayText: 'Dia',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            height: 'auto',
+            initialView: 'dayGridMonth',
+            events: calendarEvents,
+            eventClick: function(info) {
+                const eventBody = `
+                    <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
+                    <p><strong>Data:</strong> ${info.event.start.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                    <p><strong>Tópico:</strong> ${info.event.extendedProps.topic}</p>
+                    <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${info.event.extendedProps.status}</span></p>
+                `;
+                showInfo('Detalhes do Encontro', eventBody);
+            }
+        });
+        calendar.render();
     }
 
     function initializeAppUI() {
@@ -473,7 +984,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function init() {
         currentUser = JSON.parse(sessionStorage.getItem('mentoring_currentUser'));
-        loadInitialData(); // Sempre carrega os dados, a UI decidirá o que mostrar
+        loadInitialData();
     }
 
     // --- EVENT LISTENERS ---
