@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/angelosilvanno/Mentoring/issues"
   },
-  "homepage": "https://github.com/angelosilvanno/Mentoring#readme"
+  "homepage": "https://github.com/angelosilvanno/Mentoring#readme",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
 }
