@@ -18,5 +18,8 @@
   "homepage": "https://github.com/angelosilvanno/Mentoring#readme",
   "devDependencies": {
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.7"
   }
 }
