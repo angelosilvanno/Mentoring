@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    /* --- Ambiente de Compilação --- */
+    "target": "ES2022",                // Compila para uma versão moderna do JS que a maioria dos navegadores suporta.
+    "module": "ESNext",                 // Permite usar a sintaxe moderna de import/export.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // INFORMA AO TS AS APIs DISPONÍVEIS: JS moderno, APIs do Navegador (como 'document') e iterações.
+
+    /* --- Sistema de Módulos --- */
+    "moduleResolution": "bundler",      // Modo mais moderno para resolução de módulos, funciona bem com ferramentas como Vite/Parcel.
+    "allowImportingTsExtensions": true, // Permite importar arquivos '.ts' em outros arquivos '.ts'.
+    "resolveJsonModule": true,          // Permite importar arquivos .json.
+    "isolatedModules": true,            // Garante que cada arquivo possa ser compilado separadamente, pré-requisito para ferramentas de build.
+
+    /* --- Saída da Compilação --- */
+    "noEmit": true,                     // IMPORTANTE: O TS não vai gerar arquivos .js. A ferramenta de build (Vite, Parcel) fará isso.
+
+    /* --- Verificação de Tipos (Strictest) --- */
+    "strict": true,                     // Habilita todas as verificações de tipo mais rigorosas. Essencial para aproveitar o TS.
+    "noUnusedLocals": true,             // Avisa sobre variáveis locais que foram declaradas mas nunca usadas.
+    "noUnusedParameters": true,         // Avisa sobre parâmetros de função que nunca são usados.
+    "noFallthroughCasesInSwitch": true, // Evita bugs em `switch` statements onde um `case` "cai" para o próximo.
+    "noUncheckedIndexedAccess": true,   // Força a verificação de que um acesso a array/objeto por índice não é 'undefined'.
+
+    /* --- Interoperabilidade com JavaScript --- */
+    "skipLibCheck": true,               // Pula a verificação de tipos em arquivos de declaração (.d.ts) de bibliotecas de terceiros (como a do FullCalendar).
+    "forceConsistentCasingInFileNames": true // Garante consistência no case (maiúsculas/minúsculas) dos nomes de arquivos.
+  },
+  "include": ["src"] // Diz ao TypeScript para procurar por arquivos de código-fonte apenas na pasta 'src'.
+}
