@@ -8,7 +8,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 interface User {
   id: number;
   name: string;
-  username: string;
   email: string;
   password?: string;
   course: string;
@@ -121,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const appConfirmModal = new Modal(confirmModalElement);
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
     const appInfoModal = new Modal(infoModalElement);
+    
 
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
@@ -314,15 +314,11 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('Este e-mail já está em uso.', 'danger');
             return;
         }
-
-        const emailValue = String(userData.email);
-        const usernameValue = String(userData.username || '').trim();
-
+        
         const newUser: User = {
             id: Date.now(),
             name: String(userData.fullName),
-            username: usernameValue || emailValue.split('@')[0],
-            email: emailValue,
+            email: String(userData.email),
             password: String(userData.password),
             course: String(userData.course),
             role: userData.role as 'mentee' | 'mentor' | 'admin',
@@ -348,15 +344,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (users.some(user => user.email === userData.email)) {
             showToast('Este e-mail já está em uso.', 'danger'); return;
         }
-
-        const emailValue = String(userData.email);
-        const usernameValue = String(userData.username || '').trim();
-
+        
         const newUser: User = { 
             id: Date.now(), 
             name: String(userData.fullName),
-            username: usernameValue || emailValue.split('@')[0],
-            email: emailValue, 
+            email: String(userData.email), 
             password: String(userData.password), 
             course: String(userData.course), 
             role: userData.role as 'mentee' | 'mentor', 
