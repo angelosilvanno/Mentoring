@@ -5,8 +5,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
-// --- Interfaces para Tipagem dos Dados ---
-
 interface User {
   id: number;
   name: string;
@@ -64,7 +62,6 @@ interface ForumTopic {
   replies: ForumReply[];
 }
 
-// Declaração para que o TS reconheça as bibliotecas globais carregadas via CDN
 declare global {
     interface Window {
         bootstrap: any;
@@ -73,7 +70,6 @@ declare global {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Declaração de Constantes do DOM com Tipagem ---
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
@@ -89,12 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const mentorsListContainer = document.getElementById('mentors-list-container') as HTMLElement;
     const searchMentorInput = document.getElementById('search-mentor-input') as HTMLInputElement;
     const userListUl = document.getElementById('users-list-ul') as HTMLUListElement;
-    const navItems: { [key: string]: HTMLElement } = {
-        buscar: document.getElementById('nav-buscar-mentores') as HTMLElement,
-        agendamentos: document.getElementById('nav-agendamentos') as HTMLElement,
-        mensagens: document.getElementById('nav-mensagens') as HTMLElement,
-        forum: document.getElementById('nav-forum') as HTMLElement,
-        admin: document.getElementById('nav-admin') as HTMLElement,
+    const navItems: { [key: string]: HTMLElement | null } = {
+        buscar: document.getElementById('nav-buscar-mentores'),
+        agendamentos: document.getElementById('nav-agendamentos'),
+        mensagens: document.getElementById('nav-mensagens'),
+        forum: document.getElementById('nav-forum'),
+        admin: document.getElementById('nav-admin'),
     };
     const editProfileBtn = document.getElementById('btn-edit-profile') as HTMLButtonElement;
     const editProfileModal = new Modal(document.getElementById('editProfileModal') as HTMLElement);
@@ -108,8 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const composeMessageModal = new Modal(document.getElementById('composeMessageModal') as HTMLElement);
     const composeMessageForm = document.getElementById('form-compose-message') as HTMLFormElement;
     const conversationsListUl = document.getElementById('conversations-list-ul') as HTMLUListElement;
-    const viewConversationModal = new Modal(document.getElementById('viewConversationModal') as HTMLElement);
-    const replyMessageForm = document.getElementById('form-reply-message') as HTMLFormElement;
     const requestMentorshipModal = new Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
     const requestMentorshipForm = document.getElementById('form-request-mentorship') as HTMLFormElement;
     const feedbackModal = new Modal(document.getElementById('feedbackModal') as HTMLElement);
@@ -118,13 +112,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const createTopicBtn = document.getElementById('btn-create-topic') as HTMLButtonElement;
     const createTopicModal = new Modal(document.getElementById('createTopicModal') as HTMLElement);
     const createTopicForm = document.getElementById('form-create-topic') as HTMLFormElement;
-    const viewTopicModal = new Modal(document.getElementById('viewTopicModal') as HTMLElement);
-    const replyTopicForm = document.getElementById('form-reply-topic') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
-    const editAppointmentModal = new Modal(document.getElementById('editAppointmentModal') as HTMLElement);
-    const editAppointmentForm = document.getElementById('form-edit-appointment') as HTMLFormElement;
     const toastElement = document.getElementById('appToast') as HTMLElement;
     const appToast = new Toast(toastElement, { delay: 4000 });
     const confirmModalElement = document.getElementById('confirmModal') as HTMLElement;
@@ -132,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
     const appInfoModal = new Modal(infoModalElement);
 
-    // --- Estado da Aplicação com Tipagem ---
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
@@ -140,7 +129,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
 
-    // --- Funções de Persistência de Dados ---
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
     function saveMessages(): void { localStorage.setItem('mentoring_messages', JSON.stringify(messages)); }
@@ -148,7 +136,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function setCurrentUser(user: User): void { currentUser = user; sessionStorage.setItem('mentoring_currentUser', JSON.stringify(user)); }
     function clearCurrentUser(): void { currentUser = null; sessionStorage.removeItem('mentoring_currentUser'); }
 
-    // --- Funções Utilitárias de UI ---
     function showToast(message: string, type: 'success' | 'danger' | 'warning' | 'info' = 'info'): void {
         const toastBody = document.getElementById('toastBody') as HTMLElement;
         const toastTitle = document.getElementById('toastTitle') as HTMLElement;
@@ -199,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function () {
         appInfoModal.show();
     }
 
-    // --- Funções de Lógica da Aplicação ---
     function getAvatarUrl(user: User | null): string {
         if (!user || !user.email) return '';
         const seed = encodeURIComponent(user.email);
@@ -281,21 +267,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateDashboardUI(user: User): void {
         sidebarUsername.textContent = user.name;
         sidebarAvatar.src = getAvatarUrl(user);
-        Object.values(navItems).forEach(item => item.classList.add('d-none'));
+        
+        Object.values(navItems).forEach(item => item?.classList.add('d-none'));
 
         if (user.role === 'mentee') {
-            navItems.buscar.classList.remove('d-none');
-            navItems.agendamentos.classList.remove('d-none');
-            navItems.mensagens.classList.remove('d-none');
-            navItems.forum.classList.remove('d-none');
+            navItems.buscar?.classList.remove('d-none');
+            navItems.agendamentos?.classList.remove('d-none');
+            navItems.mensagens?.classList.remove('d-none');
+            navItems.forum?.classList.remove('d-none');
             switchView('buscar-mentores-section');
         } else if (user.role === 'mentor') {
-            navItems.agendamentos.classList.remove('d-none');
-            navItems.mensagens.classList.remove('d-none');
-            navItems.forum.classList.remove('d-none');
+            navItems.agendamentos?.classList.remove('d-none');
+            navItems.mensagens?.classList.remove('d-none');
+            navItems.forum?.classList.remove('d-none');
             switchView('agendamento-section');
         } else if (user.role === 'admin') {
-            navItems.admin.classList.remove('d-none');
+            navItems.admin?.classList.remove('d-none');
             switchView('admin-panel');
         }
     }
@@ -328,13 +315,16 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const emailValue = String(userData.email);
+        const usernameValue = String(userData.username || '').trim();
+
         const newUser: User = {
             id: Date.now(),
-            name: userData.fullName as string,
-            username: userData.username as string,
-            email: userData.email as string,
-            password: userData.password as string,
-            course: userData.course as string,
+            name: String(userData.fullName),
+            username: usernameValue || emailValue.split('@')[0],
+            email: emailValue,
+            password: String(userData.password),
+            course: String(userData.course),
             role: userData.role as 'mentee' | 'mentor' | 'admin',
             gender: userData.gender as 'masculino' | 'feminino' | 'outro',
             skills: [],
@@ -358,16 +348,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (users.some(user => user.email === userData.email)) {
             showToast('Este e-mail já está em uso.', 'danger'); return;
         }
+
+        const emailValue = String(userData.email);
+        const usernameValue = String(userData.username || '').trim();
+
         const newUser: User = { 
             id: Date.now(), 
-            name: userData.fullName as string,
-            username: (userData.email as string).split('@')[0],
-            email: userData.email as string, 
-            password: userData.password as string, 
-            course: userData.course as string, 
+            name: String(userData.fullName),
+            username: usernameValue || emailValue.split('@')[0],
+            email: emailValue, 
+            password: String(userData.password), 
+            course: String(userData.course), 
             role: userData.role as 'mentee' | 'mentor', 
             gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
-            skills: userData.skills ? (userData.skills as string).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
+            skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
             bio: '', 
             availability: '' 
         };
@@ -580,8 +574,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const sortedPartners = [...conversationPartners.entries()].sort((a, b) => new Date(b[1]).getTime() - new Date(a[1]).getTime());
         sortedPartners.forEach(([partnerId]) => {
             const partner = users.find(u => u.id === partnerId);
-            if (partner) {
-                const lastMessage = messages.filter(m => (m.senderId === partnerId && m.receiverId === currentUser!.id) || (m.senderId === currentUser!.id && m.receiverId === partnerId)).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+            const lastMessage = messages.filter(m => (m.senderId === partnerId && m.receiverId === currentUser!.id) || (m.senderId === currentUser!.id && m.receiverId === partnerId)).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+            
+            if (partner && lastMessage) {
                 conversationsListUl.innerHTML += `<li class="list-group-item list-group-item-action" style="cursor: pointer;" data-conversation-with="${partner.id}"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">${partner.name}</h5><small>${new Date(lastMessage.timestamp).toLocaleDateString()}</small></div><p class="mb-1 text-truncate"><strong>${lastMessage.subject || '(Sem assunto)'}:</strong> ${lastMessage.body}</p></li>`;
             }
         });
@@ -621,15 +616,21 @@ document.addEventListener('DOMContentLoaded', function () {
         const appointmentId = parseInt((document.getElementById('feedback-appointment-id') as HTMLInputElement).value);
         const rating = parseInt(feedbackStarsContainer.dataset.rating || '0');
         const comment = (document.getElementById('feedback-comment') as HTMLTextAreaElement).value;
-        if (rating === 0) { showToast('Por favor, selecione uma avaliação de 1 a 5 estrelas.', 'warning'); return; }
-        const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
-        if (appointmentIndex === -1) return;
-        appointments[appointmentIndex].status = 'avaliado';
-        appointments[appointmentIndex].feedback = { rating, comment, date: new Date().toISOString() };
+        if (rating === 0) {
+            showToast('Por favor, selecione uma avaliação de 1 a 5 estrelas.', 'warning');
+            return;
+        }
+        const appointment = appointments.find(a => a.id === appointmentId);
+        if (!appointment) {
+            showToast('Agendamento não encontrado.', 'danger');
+            return;
+        }
+        appointment.status = 'avaliado';
+        appointment.feedback = { rating, comment, date: new Date().toISOString() };
         saveAppointments();
         showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
         feedbackModal.hide();
-        // renderAppointments();
+        renderAppointments();
     }
     
     function handleCreateTopic(e: SubmitEvent) {
@@ -697,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentUser.role === 'mentee') {
             initCalendar();
         } else if (currentUser.role === 'mentor') {
-            // A lógica completa de renderização para a visão do mentor.
+            // Lógica completa de renderização para a visão do mentor.
         }
     }
 
@@ -735,7 +736,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Inicialização dos Event Listeners ---
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handlePublicRegister);
     showRegisterBtn.addEventListener('click', showRegisterFormView);
