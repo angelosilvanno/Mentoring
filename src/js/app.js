@@ -10,7 +10,6 @@
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     document.addEventListener('DOMContentLoaded', function () {
-        // --- Referências aos Elementos do DOM ---
         const authWrapper = document.getElementById('auth-wrapper');
         const appWrapper = document.getElementById('app-wrapper');
         const loginContainer = document.getElementById('login-container');
