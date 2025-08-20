@@ -1,10 +1,7 @@
-import { Modal, Toast } from 'bootstrap';
-import { Calendar } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
-import interactionPlugin from '@fullcalendar/interaction';
+import type { Modal as BootstrapModal, Toast as BootstrapToast } from 'bootstrap';
+import type { Calendar as FullCalendar } from '@fullcalendar/core';
 
+// --- Definições de Tipo (Interfaces) ---
 interface User {
   id: number;
   name: string;
@@ -61,14 +58,25 @@ interface ForumTopic {
   replies: ForumReply[];
 }
 
+// --- Declarações Globais para o TypeScript ---
 declare global {
     interface Window {
-        bootstrap: any;
-        FullCalendar: any;
+        bootstrap: {
+            Modal: typeof BootstrapModal;
+            Toast: typeof BootstrapToast;
+        };
+        FullCalendar: {
+            Calendar: typeof FullCalendar;
+            dayGridPlugin: any;
+            timeGridPlugin: any;
+            listPlugin: any;
+            interactionPlugin: any;
+        };
     }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // --- Referências aos Elementos do DOM ---
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
@@ -92,42 +100,41 @@ document.addEventListener('DOMContentLoaded', function () {
         admin: document.getElementById('nav-admin'),
     };
     const editProfileBtn = document.getElementById('btn-edit-profile') as HTMLButtonElement;
-    const editProfileModal = new Modal(document.getElementById('editProfileModal') as HTMLElement);
+    const editProfileModal = new window.bootstrap.Modal(document.getElementById('editProfileModal') as HTMLElement);
     const editProfileForm = document.getElementById('form-edit-profile') as HTMLFormElement;
     const addUserBtn = document.getElementById('btn-add-user') as HTMLButtonElement;
-    const addUserModal = new Modal(document.getElementById('addUserModal') as HTMLElement);
+    const addUserModal = new window.bootstrap.Modal(document.getElementById('addUserModal') as HTMLElement);
     const addUserForm = document.getElementById('form-add-user') as HTMLFormElement;
-    const viewProfileModal = new Modal(document.getElementById('viewProfileModal') as HTMLElement);
+    const viewProfileModal = new window.bootstrap.Modal(document.getElementById('viewProfileModal') as HTMLElement);
     const requestMentorshipBtn = document.getElementById('btn-request-mentorship') as HTMLButtonElement;
     const sendMessageFromProfileBtn = document.getElementById('btn-send-message-from-profile') as HTMLButtonElement;
-    const composeMessageModal = new Modal(document.getElementById('composeMessageModal') as HTMLElement);
+    const composeMessageModal = new window.bootstrap.Modal(document.getElementById('composeMessageModal') as HTMLElement);
     const composeMessageForm = document.getElementById('form-compose-message') as HTMLFormElement;
     const conversationsListUl = document.getElementById('conversations-list-ul') as HTMLUListElement;
-    const requestMentorshipModal = new Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
+    const requestMentorshipModal = new window.bootstrap.Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
     const requestMentorshipForm = document.getElementById('form-request-mentorship') as HTMLFormElement;
-    const feedbackModal = new Modal(document.getElementById('feedbackModal') as HTMLElement);
+    const feedbackModal = new window.bootstrap.Modal(document.getElementById('feedbackModal') as HTMLElement);
     const feedbackForm = document.getElementById('form-send-feedback') as HTMLFormElement;
     const feedbackStarsContainer = document.getElementById('feedback-stars') as HTMLElement;
     const createTopicBtn = document.getElementById('btn-create-topic') as HTMLButtonElement;
-    const createTopicModal = new Modal(document.getElementById('createTopicModal') as HTMLElement);
+    const createTopicModal = new window.bootstrap.Modal(document.getElementById('createTopicModal') as HTMLElement);
     const createTopicForm = document.getElementById('form-create-topic') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
     const toastElement = document.getElementById('appToast') as HTMLElement;
-    const appToast = new Toast(toastElement, { delay: 4000 });
+    const appToast = new window.bootstrap.Toast(toastElement, { delay: 4000 });
     const confirmModalElement = document.getElementById('confirmModal') as HTMLElement;
-    const appConfirmModal = new Modal(confirmModalElement);
+    const appConfirmModal = new window.bootstrap.Modal(confirmModalElement);
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
-    const appInfoModal = new Modal(infoModalElement);
+    const appInfoModal = new window.bootstrap.Modal(infoModalElement);
     
-
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
     let forumTopics: ForumTopic[] = JSON.parse(localStorage.getItem('mentoring_forum_topics') || '[]');
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
-    let calendar: Calendar | null = null;
+    let calendar: FullCalendar | null = null;
 
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
@@ -663,8 +670,13 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         });
 
-        calendar = new Calendar(calendarContainer, {
-            plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
+        calendar = new window.FullCalendar.Calendar(calendarContainer, {
+            plugins: [
+                window.FullCalendar.dayGridPlugin,
+                window.FullCalendar.timeGridPlugin,
+                window.FullCalendar.listPlugin,
+                window.FullCalendar.interactionPlugin
+            ],
             locale: 'pt-br',
             buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
             allDayText: 'Dia',
@@ -672,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function () {
             height: 'auto',
             initialView: 'dayGridMonth',
             events: calendarEvents,
-            eventClick: function (info) {
+            eventClick: function (info: any) {
                 const eventBody = `
                     <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
                     <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
