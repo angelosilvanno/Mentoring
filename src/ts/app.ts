@@ -58,7 +58,6 @@ interface ForumTopic {
   replies: ForumReply[];
 }
 
-// --- Declarações Globais para o TypeScript ---
 declare global {
     interface Window {
         bootstrap: {
@@ -76,7 +75,6 @@ declare global {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Referências aos Elementos do DOM ---
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
