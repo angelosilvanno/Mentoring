@@ -294,18 +294,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function handleLogin(e: SubmitEvent): void {
-        e.preventDefault();
-        const target = e.target as HTMLFormElement;
-        const email = (target.querySelector('input[type="email"]') as HTMLInputElement).value;
-        const password = (target.querySelector('input[type="password"]') as HTMLInputElement).value;
-        const foundUser = users.find(user => user.email === email && user.password === password);
+     e.preventDefault();
+     const target = e.target as HTMLFormElement;
+
+     const loginIdentifier = (target.querySelector('input[name="loginIdentifier"]') as HTMLInputElement).value;
+     const password = (target.querySelector('input[type="password"]') as HTMLInputElement).value;
+
+        const foundUser = users.find(user => 
+          (user.email === loginIdentifier || user.username === loginIdentifier) && 
+           user.password === password
+        );
+    
         if (foundUser) {
-            setCurrentUser(foundUser);
-            window.location.reload();
+          setCurrentUser(foundUser);
+          window.location.reload();
         } else {
-            showToast('E-mail ou senha inválidos!', 'danger');
+          showToast('Identificador ou senha inválidos!', 'danger');
         }
-    }
+   }
 
     function handlePublicRegister(e: SubmitEvent): void {
         e.preventDefault();
