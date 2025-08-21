@@ -4,6 +4,7 @@ import type { Calendar as FullCalendar } from '@fullcalendar/core';
 // --- Definições de Tipo (Interfaces) ---
 interface User {
   id: number;
+  username: string;
   name: string;
   email: string;
   password?: string;
@@ -315,6 +316,10 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast("Por favor, preencha todos os campos obrigatórios.", "warning");
             return;
         }
+        if (users.some(user => user.username === userData.username)) { // Adicione esta verificação
+           showToast('Este nome de usuário já está em uso.', 'danger');
+           return;
+       }
         if (users.some(user => user.email === userData.email)) {
             showToast('Este e-mail já está em uso.', 'danger');
             return;
@@ -322,6 +327,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const newUser: User = {
             id: Date.now(),
+            username: String(userData.username),
             name: String(userData.fullName),
             email: String(userData.email),
             password: String(userData.password),
@@ -340,35 +346,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function handleAdminAddUser(e: SubmitEvent) {
-        e.preventDefault();
-        const formData = new FormData(e.target as HTMLFormElement);
-        const userData = Object.fromEntries(formData.entries());
-        if (!userData.fullName || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
-            showToast("Por favor, preencha todos os campos.", "warning"); return;
-        }
-        if (users.some(user => user.email === userData.email)) {
-            showToast('Este e-mail já está em uso.', 'danger'); return;
-        }
-        
-        const newUser: User = { 
-            id: Date.now(), 
-            name: String(userData.fullName),
-            email: String(userData.email), 
-            password: String(userData.password), 
-            course: String(userData.course), 
-            role: userData.role as 'mentee' | 'mentor', 
-            gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
-            skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
-            bio: '', 
-            availability: '' 
-        };
-        users.push(newUser);
-        saveUsers();
-        showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
-        addUserForm.reset();
-        addUserModal.hide();
-        renderAdminDashboard();
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const userData = Object.fromEntries(formData.entries());
+
+    if (!userData.fullName || !userData.username || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
+        showToast("Por favor, preencha todos os campos.", "warning"); return;
     }
+    
+    if (users.some(user => user.username === userData.username)) {
+        showToast('Este nome de usuário já está em uso.', 'danger'); return;
+    }
+    if (users.some(user => user.email === userData.email)) {
+        showToast('Este e-mail já está em uso.', 'danger'); return;
+    }
+    
+    const newUser: User = { 
+        id: Date.now(), 
+        username: String(userData.username), 
+        name: String(userData.fullName),
+        email: String(userData.email), 
+        password: String(userData.password), 
+        course: String(userData.course), 
+        role: userData.role as 'mentee' | 'mentor', 
+        gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
+        skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
+        bio: '', 
+        availability: '' 
+    };
+     users.push(newUser);
+     saveUsers();
+     showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
+     addUserForm.reset();
+     addUserModal.hide();
+     renderAdminDashboard();
+   }
 
     function buildMentorCard(mentor: User): string {
         const allRatings = appointments
