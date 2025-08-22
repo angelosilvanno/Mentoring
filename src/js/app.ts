@@ -682,7 +682,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     });
 
-    // Usa as variáveis importadas diretamente, sem "window"
     calendar = new Calendar(calendarContainer, {
         plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
         locale: 'pt-br',
