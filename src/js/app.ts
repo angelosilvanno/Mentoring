@@ -724,6 +724,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (targetViewId === 'agendamento-section') {
         console.log('1. Entrou no switchView para agendamento. Role:', currentUser.role);
+        calendarContainer.classList.remove("d-none"); 
         mentorAppointmentView.style.display = currentUser.role === 'mentor' ? 'block' : 'none';
         calendarContainer.style.display = currentUser.role === 'mentee' ? 'block' : 'none';
         renderAppointments();

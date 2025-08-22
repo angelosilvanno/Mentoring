@@ -190,16 +190,6 @@ a:hover {
     padding: 1.5rem;
 }
 
-#agendamento-card-body {
-    display: flex;
-    flex-direction: column;
-}
-
-#calendar-container {
-    flex-grow: 1;
-    min-height: 400px;
-}
-
 #app-header {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -304,4 +294,23 @@ a:hover {
   .fs-5 {
     font-size: 1.1rem !important;
   }
+}
+
+/* --- CORREÇÃO FINAL DO CALENDÁRIO --- */
+.card.h-100 {
+    display: flex;
+    flex-direction: column;
+}
+.card.h-100 > .card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+}
+#agendamento-card-body {
+    padding: 0;
+}
+#agendamento-card-body > #calendar-container {
+    flex-grow: 1;
+    padding: 1.5rem;
 }
