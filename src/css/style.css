@@ -296,21 +296,34 @@ a:hover {
   }
 }
 
-/* --- CORREÇÃO FINAL DO CALENDÁRIO --- */
-.card.h-100 {
-    display: flex;
+/* --- CORREÇÃO DE ALTURA DEFINITIVA --- */
+/* 1. Garante que o contêiner principal do conteúdo ocupe toda a altura */
+#user-content {
+    height: 100%;
+}
+/* 2. Força as seções (como a de agendamento) a ocuparem todo o espaço vertical */
+.content-view {
+    height: 100%;
+    display: flex; /* Permite que os filhos se estiquem */
     flex-direction: column;
 }
-.card.h-100 > .card-body {
+/* 3. Força o card a se esticar e preencher toda a seção */
+.content-view > .card {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
 }
+/* 4. Força o corpo do card a se esticar e preencher todo o card */
+.content-view > .card > .card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+/* 5. Finalmente, o contêiner do calendário se estica para preencher o corpo do card */
+#calendar-container {
+    flex-grow: 1;
+}
+/* 6. Remove o padding do corpo do card de agendamento para evitar espaçamento duplo */
 #agendamento-card-body {
     padding: 0;
-}
-#agendamento-card-body > #calendar-container {
-    flex-grow: 1;
-    padding: 1.5rem;
 }
