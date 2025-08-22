@@ -1,5 +1,8 @@
-import type { Modal as BootstrapModal, Toast as BootstrapToast } from 'bootstrap';
-import type { Calendar as FullCalendar } from '@fullcalendar/core';
+import { Calendar } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
 
 // --- Definições de Tipo (Interfaces) ---
 interface User {
@@ -57,22 +60,6 @@ interface ForumTopic {
   authorId: number;
   createdAt: string;
   replies: ForumReply[];
-}
-
-declare global {
-    interface Window {
-        bootstrap: {
-            Modal: typeof BootstrapModal;
-            Toast: typeof BootstrapToast;
-        };
-        FullCalendar: {
-            Calendar: typeof FullCalendar;
-            dayGridPlugin: any;
-            timeGridPlugin: any;
-            listPlugin: any;
-            interactionPlugin: any;
-        };
-    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -133,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
     let forumTopics: ForumTopic[] = JSON.parse(localStorage.getItem('mentoring_forum_topics') || '[]');
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
-    let calendar: FullCalendar | null = null;
+    let calendar: Calendar | null = null;
 
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
@@ -664,22 +651,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function initCalendar(): void {
     if (!currentUser) return;
-    console.log('3. Entrou em initCalendar. O container do calendário está visível?', calendarContainer.style.display);
-
     if (calendar) {
         calendar.destroy();
     }
 
-    if (!window.FullCalendar || !window.FullCalendar.Calendar) {
-        console.error("ERRO CRÍTICO: A biblioteca FullCalendar não está disponível no objeto window.");
-        showToast("Ocorreu um erro ao carregar o calendário.", "danger");
-        return;
-    }
-
     const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
     
-    console.log('3.1 Mapeando', myAppointments.length, 'agendamentos para eventos.');
-
     const calendarEvents = myAppointments.map(app => {
         const otherUserId = currentUser!.role === 'mentee' ? app.mentorId : app.menteeId;
         const otherUser = users.find(u => u.id === otherUserId);
@@ -705,15 +682,9 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     });
 
-    console.log('3.2 Eventos mapeados com sucesso. Criando o calendário.');
-
-    calendar = new window.FullCalendar.Calendar(calendarContainer, {
-        plugins: [
-            window.FullCalendar.dayGridPlugin,
-            window.FullCalendar.timeGridPlugin,
-            window.FullCalendar.listPlugin,
-            window.FullCalendar.interactionPlugin
-        ],
+    // Usa as variáveis importadas diretamente, sem "window"
+    calendar = new Calendar(calendarContainer, {
+        plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
         locale: 'pt-br',
         buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
         allDayText: 'Dia',
@@ -732,9 +703,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-     calendar.render();
-     console.log('4. Calendário renderizado com sucesso.');
-    }
+      calendar.render();
+   }
 
     function renderAppointments(): void {
         if (!currentUser) return;
