@@ -11,12 +11,13 @@
   --sidebar-hover-bg: #e7f5ff;
 }
 
-body {
+html, body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--primary-text-color);
   line-height: 1.6;
   margin: 0;
   background-color: var(--background-light);
+  height: 100%;
 }
 
 a {
@@ -81,7 +82,8 @@ a:hover {
 
 #app-wrapper {
   display: flex;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 #app-sidebar {
@@ -168,6 +170,8 @@ a:hover {
   flex-grow: 1;
   padding: 2rem;
   width: calc(100% - 260px);
+  height: 100%;
+  overflow-y: auto;
 }
 
 .content-view .card {
@@ -184,6 +188,16 @@ a:hover {
 
 .content-view .card-body {
     padding: 1.5rem;
+}
+
+#agendamento-card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+#calendar-container {
+    flex-grow: 1;
+    min-height: 400px;
 }
 
 #app-header {
@@ -225,8 +239,8 @@ a:hover {
 .horizontal-scroll-container {
   display: flex;
   overflow-x: auto;
-  padding-bottom: 1rem; 
-  gap: 1rem; 
+  padding-bottom: 1rem;
+  gap: 1rem;
 }
 
 .horizontal-scroll-container::-webkit-scrollbar {
@@ -245,7 +259,7 @@ a:hover {
 }
 
 .mentor-card-horizontal {
-  flex: 0 0 280px; 
+  flex: 0 0 280px;
   width: 280px;
 }
 
@@ -259,13 +273,12 @@ a:hover {
     padding-left: 1rem !important;
 }
 
-/* Tablets (menor que 992px) */
 @media (max-width: 991.98px) {
   #app-sidebar {
     position: fixed;
     z-index: 1030;
     height: 100%;
-    margin-left: -260px; 
+    margin-left: -260px;
   }
 
   #app-main-content {
@@ -275,7 +288,6 @@ a:hover {
 
 }
 
-/* Celulares (menor que 768px) */
 @media (max-width: 767.98px) {
   #app-main-content {
     padding: 1rem;
