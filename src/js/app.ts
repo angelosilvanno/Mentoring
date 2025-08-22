@@ -663,54 +663,77 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initCalendar(): void {
-        if (!currentUser) return;
-        if (calendar) {
-            calendar.destroy();
-        }
-        const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
-        const calendarEvents = myAppointments.map(app => {
-            const otherUser = users.find(u => u.id === (currentUser!.role === 'mentee' ? app.mentorId : app.menteeId));
-            let color = '#0d6efd';
-            if (app.status === 'pendente') color = '#ffc107';
-            if (app.status === 'aceito') color = '#198754';
-            if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
-            return {
-                id: app.id.toString(),
-                title: `Mentoria com ${otherUser ? otherUser.name : '...'}`,
-                start: `${app.date}T${app.time}`,
-                color: color,
-                extendedProps: {
-                    topic: app.topic,
-                    status: app.status
-                }
-            };
-        });
+    if (!currentUser) return;
+    console.log('3. Entrou em initCalendar. O container do calendário está visível?', calendarContainer.style.display);
 
-        calendar = new window.FullCalendar.Calendar(calendarContainer, {
-            plugins: [
-                window.FullCalendar.dayGridPlugin,
-                window.FullCalendar.timeGridPlugin,
-                window.FullCalendar.listPlugin,
-                window.FullCalendar.interactionPlugin
-            ],
-            locale: 'pt-br',
-            buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
-            allDayText: 'Dia',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-            height: 'auto',
-            initialView: 'dayGridMonth',
-            events: calendarEvents,
-            eventClick: function (info: any) {
-                const eventBody = `
-                    <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
-                    <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
-                    <p><strong>Tópico:</strong> ${info.event.extendedProps.topic}</p>
-                    <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${info.event.extendedProps.status}</span></p>
-                `;
-                showInfo('Detalhes do Encontro', eventBody);
+    if (calendar) {
+        calendar.destroy();
+    }
+
+    if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+        console.error("ERRO CRÍTICO: A biblioteca FullCalendar não está disponível no objeto window.");
+        showToast("Ocorreu um erro ao carregar o calendário.", "danger");
+        return;
+    }
+
+    const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
+    
+    console.log('3.1 Mapeando', myAppointments.length, 'agendamentos para eventos.');
+
+    const calendarEvents = myAppointments.map(app => {
+        const otherUserId = currentUser!.role === 'mentee' ? app.mentorId : app.menteeId;
+        const otherUser = users.find(u => u.id === otherUserId);
+
+        const eventTitle = otherUser 
+            ? `Mentoria com ${otherUser.name}` 
+            : 'Mentoria (Usuário Removido)';
+
+        let color = '#0d6efd';
+        if (app.status === 'pendente') color = '#ffc107';
+        if (app.status === 'aceito') color = '#198754';
+        if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
+
+        return {
+            id: app.id.toString(),
+            title: eventTitle,
+            start: `${app.date}T${app.time}`,
+            color: color,
+            extendedProps: {
+                topic: app.topic,
+                status: app.status
             }
-        });
-        calendar.render();
+        };
+    });
+
+    console.log('3.2 Eventos mapeados com sucesso. Criando o calendário.');
+
+    calendar = new window.FullCalendar.Calendar(calendarContainer, {
+        plugins: [
+            window.FullCalendar.dayGridPlugin,
+            window.FullCalendar.timeGridPlugin,
+            window.FullCalendar.listPlugin,
+            window.FullCalendar.interactionPlugin
+        ],
+        locale: 'pt-br',
+        buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
+        allDayText: 'Dia',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+        height: '100%',
+        initialView: 'dayGridMonth',
+        events: calendarEvents,
+        eventClick: function (info: any) {
+            const eventBody = `
+                <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
+                <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                <p><strong>Tópico:</strong> ${info.event.extendedProps.topic}</p>
+                <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${info.event.extendedProps.status}</span></p>
+            `;
+            showInfo('Detalhes do Encontro', eventBody);
+        }
+    });
+
+     calendar.render();
+     console.log('4. Calendário renderizado com sucesso.');
     }
 
     function renderAppointments(): void {
@@ -730,9 +753,10 @@ document.addEventListener('DOMContentLoaded', function () {
         views.forEach(view => view.classList.toggle('d-none', view.id !== targetViewId));
         
         if (targetViewId === 'agendamento-section') {
-            mentorAppointmentView.style.display = currentUser.role === 'mentor' ? 'block' : 'none';
-            calendarContainer.style.display = currentUser.role === 'mentee' ? 'block' : 'none';
-            renderAppointments(); 
+        console.log('1. Entrou no switchView para agendamento. Role:', currentUser.role);
+        mentorAppointmentView.style.display = currentUser.role === 'mentor' ? 'block' : 'none';
+        calendarContainer.style.display = currentUser.role === 'mentee' ? 'block' : 'none';
+        renderAppointments();
         } else if (targetViewId === 'admin-panel') {
             renderAdminDashboard();
         } else if (targetViewId === 'mensagem-section') {
