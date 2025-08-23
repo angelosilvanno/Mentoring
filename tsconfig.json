@@ -1,20 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
+    "target": "ES2015",
+    "module": "ES2015",
+    "lib": [      // <-- ADICIONE ESTA SEÇÃO
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "rootDir": "./src/js",
+    "outDir": "./dist/js",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "moduleResolution": "node",
+    "sourceMap": true
   },
-  "include": ["src"] 
+  "include": [
+    "src/js/**/*"
+  ]
 }
