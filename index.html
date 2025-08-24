@@ -69,6 +69,8 @@
     <aside id="app-sidebar">
       <div class="sidebar-profile"><img id="sidebar-avatar" src="" class="rounded-circle" alt="Avatar do Usuário"><div class="sidebar-user-info"><span id="sidebar-username"></span><button id="btn-edit-profile" class="btn btn-sm btn-link p-0">Editar perfil</button></div></div>
       <ul class="nav flex-column sidebar-nav">
+        <li class="nav-item" id="nav-dashboard"><a href="#" class="nav-link" data-view="dashboard-section">
+          <i class="bi bi-house-door"></i> Início</a></li>
         <li class="nav-item" id="nav-buscar-mentores"><a href="#" class="nav-link" data-view="buscar-mentores-section">
           <i class="bi bi-search"></i> Buscar Mentores</a></li>
         <li class="nav-item" id="nav-agendamentos"><a href="#" class="nav-link" data-view="agendamento-section">
@@ -84,7 +86,45 @@
     </aside>
 
     <main id="app-main-content" class="flex-grow-1 p-4">
+        <button class="btn btn-light d-lg-none" id="btn-toggle-sidebar" type="button" aria-label="Toggle navigation">
+            <i class="bi bi-list"></i>
+        </button>
         <div id="user-content" class="row g-4 h-100">
+          <section id="dashboard-section" class="content-view col-12 d-none">
+            <h2 class="fs-4 mb-4">Bem-vindo(a) de volta!</h2>
+            <div class="row g-4">
+              <div class="col-lg-8">
+                <div class="card h-100">
+                  <div class="card-header">
+                    <h5 class="mb-0 fs-6"><i class="bi bi-calendar-event me-2"></i>Próximo Encontro</h5>
+                  </div>
+                  <div class="card-body" id="dashboard-next-appointment">
+                    <p class="text-muted">Nenhum próximo encontro agendado.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="card h-100">
+                  <div class="card-header">
+                    <h5 class="mb-0 fs-6"><i class="bi bi-person-check me-2"></i>Mentores Recentes</h5>
+                  </div>
+                  <div class="list-group list-group-flush" id="dashboard-recent-mentors">
+                    <p class="text-muted p-3">Nenhuma interação recente.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                     <h5 class="mb-0 fs-6"><i class="bi bi-star me-2"></i>Mentores Sugeridos para Você</h5>
+                  </div>
+                  <div class="card-body">
+                    <div id="dashboard-suggested-mentors" class="row g-3"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
           <section id="buscar-mentores-section" class="content-view col-12 d-none">
             <div class="card h-100">
               <div class="card-header"><h2 class="fs-5 mb-0">Encontrar um Mentor</h2></div>
