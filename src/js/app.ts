@@ -69,6 +69,7 @@ interface ForumTopic {
 
 document.addEventListener('DOMContentLoaded', function () {
     // --- Seletores de Elementos DOM ---
+    const mobileHeaderTitle = document.getElementById('mobile-header-title') as HTMLElement;
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
@@ -1058,6 +1059,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!currentUser) return;
         document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
         const activeLink = document.querySelector(`.nav-link[data-view="${targetViewId}"]`);
+        if (activeLink && mobileHeaderTitle) {
+         mobileHeaderTitle.textContent = activeLink.textContent || 'Mentoring';
+        }
         if (activeLink) activeLink.classList.add('active');
         views.forEach(view => view.classList.toggle('d-none', view.id !== targetViewId));
         
