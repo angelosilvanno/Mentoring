@@ -85,181 +85,190 @@
       <div class="sidebar-footer mt-auto"><button id="btn-logout" class="btn btn-outline-secondary w-100">Sair</button></div>
     </aside>
 
-    <button class="btn btn-light d-lg-none" id="btn-toggle-sidebar" type="button" aria-label="Toggle navigation">
-        <i class="bi bi-list"></i>
-    </button>
+    <div id="sidebar-backdrop" class="d-none"></div>
 
-    <main id="app-main-content" class="flex-grow-1 p-4">
-        <div id="user-content" class="row g-4 h-100">
-          <section id="dashboard-section" class="content-view col-12 d-none">
-            <h2 class="fs-4 mb-4">Bem-vindo(a) de volta!</h2>
-            <div class="row g-4">
-              <div class="col-lg-8">
+    <div class="main-wrapper flex-grow-1">
+        <header id="mobile-header" class="d-lg-none">
+            <button class="btn btn-light" id="btn-toggle-sidebar" type="button" aria-label="Toggle navigation">
+                <i class="bi bi-list"></i>
+            </button>
+            <h1 class="h5 mb-0" id="mobile-header-title">Início</h1>
+        </header>
+
+        <div id="mobile-header-spacer" class="d-lg-none"></div>
+
+        <main id="app-main-content">
+            <div id="user-content" class="row g-4 h-100">
+              <section id="dashboard-section" class="content-view col-12 d-none">
+                <h2 class="fs-4 mb-4">Bem-vindo(a) de volta!</h2>
+                <div class="row g-4">
+                  <div class="col-lg-8">
+                    <div class="card h-100">
+                      <div class="card-header">
+                        <h5 class="mb-0 fs-6"><i class="bi bi-calendar-event me-2"></i>Próximo Encontro</h5>
+                      </div>
+                      <div class="card-body" id="dashboard-next-appointment">
+                        <p class="text-muted">Nenhum próximo encontro agendado.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="card h-100">
+                      <div class="card-header">
+                        <h5 class="mb-0 fs-6"><i class="bi bi-person-check me-2"></i>Mentores Recentes</h5>
+                      </div>
+                      <div class="list-group list-group-flush" id="dashboard-recent-mentors">
+                        <p class="text-muted p-3">Nenhuma interação recente.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                         <h5 class="mb-0 fs-6"><i class="bi bi-star me-2"></i>Mentores Sugeridos para Você</h5>
+                      </div>
+                      <div class="card-body">
+                        <div id="dashboard-suggested-mentors" class="row g-3"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section id="buscar-mentores-section" class="content-view col-12 d-none">
                 <div class="card h-100">
-                  <div class="card-header">
-                    <h5 class="mb-0 fs-6"><i class="bi bi-calendar-event me-2"></i>Próximo Encontro</h5>
-                  </div>
-                  <div class="card-body" id="dashboard-next-appointment">
-                    <p class="text-muted">Nenhum próximo encontro agendado.</p>
+                  <div class="card-header"><h2 class="fs-5 mb-0">Encontrar um Mentor</h2></div>
+                  <div class="card-body">
+                    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                        <div>
+                          Bem-vindo(a)! Navegue pelas abas para encontrar mentores recomendados, em destaque ou busque em nossa comunidade.
+                        </div>
+                    </div>
+    
+                    <ul class="nav nav-tabs nav-fill mb-4" id="discovery-tabs" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="recommended-tab" data-bs-toggle="tab" data-bs-target="#recommended-tab-pane" type="button" role="tab">Recomendados</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="featured-tab" data-bs-toggle="tab" data-bs-target="#featured-tab-pane" type="button" role="tab">Destaque</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="all-mentors-tab" data-bs-toggle="tab" data-bs-target="#all-mentors-tab-pane" type="button" role="tab">Buscar Todos</button>
+                      </li>
+                    </ul>
+    
+                    <div class="tab-content" id="discovery-tabs-content">
+                      <div class="tab-pane fade show active" id="recommended-tab-pane" role="tabpanel">
+                        <div id="recommended-mentors-container" class="row g-3">
+                        </div>
+                      </div>
+                      <div class="tab-pane fade" id="featured-tab-pane" role="tabpanel">
+                        <div id="featured-mentors-container" class="row g-3">
+                        </div>
+                      </div>
+                      <div class="tab-pane fade" id="all-mentors-tab-pane" role="tabpanel">
+                        <div class="mb-4">
+                            <h4 class="fs-6 fw-semibold">Busque por categorias populares:</h4>
+                            <div id="popular-tags-container"></div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="position-relative">
+                              <i class="bi bi-search fs-5 text-muted position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                              <input type="search" id="search-mentor-input" class="form-control form-control-lg ps-5" placeholder="Buscar por nome ou disciplina...">
+                            </div>
+                        </div>
+                        <div id="mentors-list-container" class="row g-3"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="col-lg-4">
+              </section>
+    
+              <section id="agendamento-section" class="content-view col-md-12 d-none">
                 <div class="card h-100">
-                  <div class="card-header">
-                    <h5 class="mb-0 fs-6"><i class="bi bi-person-check me-2"></i>Mentores Recentes</h5>
-                  </div>
-                  <div class="list-group list-group-flush" id="dashboard-recent-mentors">
-                    <p class="text-muted p-3">Nenhuma interação recente.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header">
-                     <h5 class="mb-0 fs-6"><i class="bi bi-star me-2"></i>Mentores Sugeridos para Você</h5>
-                  </div>
-                  <div class="card-body">
-                    <div id="dashboard-suggested-mentors" class="row g-3"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section id="buscar-mentores-section" class="content-view col-12 d-none">
-            <div class="card h-100">
-              <div class="card-header"><h2 class="fs-5 mb-0">Encontrar um Mentor</h2></div>
-              <div class="card-body">
-                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
-                    <i class="bi bi-info-circle-fill me-3 fs-4"></i>
-                    <div>
-                      Bem-vindo(a)! Navegue pelas abas para encontrar mentores recomendados, em destaque ou busque em nossa comunidade.
-                    </div>
-                </div>
-
-                <ul class="nav nav-tabs nav-fill mb-4" id="discovery-tabs" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="recommended-tab" data-bs-toggle="tab" data-bs-target="#recommended-tab-pane" type="button" role="tab">Recomendados</button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="featured-tab" data-bs-toggle="tab" data-bs-target="#featured-tab-pane" type="button" role="tab">Destaque</button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="all-mentors-tab" data-bs-toggle="tab" data-bs-target="#all-mentors-tab-pane" type="button" role="tab">Buscar Todos</button>
-                  </li>
-                </ul>
-
-                <div class="tab-content" id="discovery-tabs-content">
-                  <div class="tab-pane fade show active" id="recommended-tab-pane" role="tabpanel">
-                    <div id="recommended-mentors-container" class="row g-3">
-                    </div>
-                  </div>
-                  <div class="tab-pane fade" id="featured-tab-pane" role="tabpanel">
-                    <div id="featured-mentors-container" class="row g-3">
-                    </div>
-                  </div>
-                  <div class="tab-pane fade" id="all-mentors-tab-pane" role="tabpanel">
-                    <div class="mb-4">
-                        <h4 class="fs-6 fw-semibold">Busque por categorias populares:</h4>
-                        <div id="popular-tags-container"></div>
-                    </div>
-                    <div class="mb-4">
-                        <div class="position-relative">
-                          <i class="bi bi-search fs-5 text-muted position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                          <input type="search" id="search-mentor-input" class="form-control form-control-lg ps-5" placeholder="Buscar por nome ou disciplina...">
+                    <div class="card-header"><h2 class="fs-5 mb-0">Meus Agendamentos</h2></div>
+                    <div class="card-body" id="agendamento-card-body">
+                        <div id="mentor-appointment-view">
+                            <div class="row g-3 mb-4" id="mentor-stats-panel">
+                              <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-total">0</h4><p class="text-muted mb-0">Encontros Realizados</p></div></div></div>
+                              <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-mentees">0</h4><p class="text-muted mb-0">Mentees Atendidos</p></div></div></div>
+                              <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h5" id="mentor-stats-next">Nenhum</h4><p class="text-muted mb-0">Próximo Encontro</p></div></div></div>
+                            </div>
+                            <ul class="nav nav-tabs nav-fill mb-3" id="appointments-tabs" role="tablist">
+                              <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-tab-pane" type="button" role="tab">Próximos Encontros</button>
+                              </li>
+                              <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-tab-pane" type="button" role="tab">Histórico</button>
+                              </li>
+                            </ul>
+                            <div class="tab-content" id="appointments-tabs-content">
+                              <div class="tab-pane fade show active" id="upcoming-tab-pane" role="tabpanel">
+                                <div id="upcoming-appointments-list"></div>
+                              </div>
+                              <div class="tab-pane fade" id="past-tab-pane" role="tabpanel">
+                                <div id="past-appointments-list"></div>
+                              </div>
+                            </div>
                         </div>
+                        <div id="calendar-container" class="d-none"></div>
                     </div>
-                    <div id="mentors-list-container" class="row g-3"></div>
-                  </div>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          <section id="agendamento-section" class="content-view col-md-12 d-none">
-            <div class="card h-100">
-                <div class="card-header"><h2 class="fs-5 mb-0">Meus Agendamentos</h2></div>
-                <div class="card-body" id="agendamento-card-body">
-                    <div id="mentor-appointment-view">
-                        <div class="row g-3 mb-4" id="mentor-stats-panel">
-                          <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-total">0</h4><p class="text-muted mb-0">Encontros Realizados</p></div></div></div>
-                          <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h1" id="mentor-stats-mentees">0</h4><p class="text-muted mb-0">Mentees Atendidos</p></div></div></div>
-                          <div class="col-md-4"><div class="card text-center h-100"><div class="card-body"><h4 class="h5" id="mentor-stats-next">Nenhum</h4><p class="text-muted mb-0">Próximo Encontro</p></div></div></div>
-                        </div>
-                        <ul class="nav nav-tabs nav-fill mb-3" id="appointments-tabs" role="tablist">
-                          <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-tab-pane" type="button" role="tab">Próximos Encontros</button>
-                          </li>
-                          <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-tab-pane" type="button" role="tab">Histórico</button>
-                          </li>
-                        </ul>
-                        <div class="tab-content" id="appointments-tabs-content">
-                          <div class="tab-pane fade show active" id="upcoming-tab-pane" role="tabpanel">
-                            <div id="upcoming-appointments-list"></div>
-                          </div>
-                          <div class="tab-pane fade" id="past-tab-pane" role="tabpanel">
-                            <div id="past-appointments-list"></div>
-                          </div>
-                        </div>
+              </section>
+    
+              <section id="mensagem-section" class="content-view col-12 d-none">
+                <div class="card h-100"><div class="card-header"><h2 class="fs-5 mb-0">Minhas Mensagens</h2></div><div class="card-body p-0" id="conversations-container"><ul class="list-group list-group-flush" id="conversations-list-ul"><li class="list-group-item text-muted text-center p-4">Nenhuma conversa iniciada.</li></ul></div></div></section>
+              <section id="forum-section" class="content-view col-12 d-none"><div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h2 class="fs-5 mb-0">Fórum da Comunidade</h2><button class="btn btn-primary btn-sm" id="btn-create-topic">
+                    <i class="bi bi-plus-circle"></i> Criar Tópico</button></div><div class="card-body" id="forum-card-body"><div class="list-group"></div></div></div></section>
+              
+              <section id="admin-panel" class="content-view col-12 d-none">
+                <div class="row g-4">
+                  <div class="col-md-3">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title" id="total-users-stat">0</h5>
+                        <p class="card-text text-muted">Membros da Comunidade</p>
+                      </div>
                     </div>
-                    <div id="calendar-container" class="d-none"></div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title" id="total-mentors-stat">0</h5>
+                        <p class="card-text text-muted">Mentores</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title" id="total-mentees-stat">0</h5>
+                        <p class="card-text text-muted">Mentees</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h5 class="card-title" id="total-admins-stat">0</h5>
+                        <p class="card-text text-muted">Administradores</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                <div class="card mt-4">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="fs-5 mb-0">Gerenciamento de Usuários</h2>
+                    <button class="btn btn-primary btn-sm" id="btn-add-user"><i class="bi bi-plus-circle"></i> Adicionar Usuário</button>
+                  </div>
+                  <div class="card-body" id="user-list-container"><ul id="users-list-ul" class="list-group list-group-flush"></ul></div>
+                </div>
+              </section>
             </div>
-          </section>
-
-          <section id="mensagem-section" class="content-view col-12 d-none">
-            <div class="card h-100"><div class="card-header"><h2 class="fs-5 mb-0">Minhas Mensagens</h2></div><div class="card-body p-0" id="conversations-container"><ul class="list-group list-group-flush" id="conversations-list-ul"><li class="list-group-item text-muted text-center p-4">Nenhuma conversa iniciada.</li></ul></div></div></section>
-          <section id="forum-section" class="content-view col-12 d-none"><div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h2 class="fs-5 mb-0">Fórum da Comunidade</h2><button class="btn btn-primary btn-sm" id="btn-create-topic">
-                <i class="bi bi-plus-circle"></i> Criar Tópico</button></div><div class="card-body" id="forum-card-body"><div class="list-group"></div></div></div></section>
-          
-          <section id="admin-panel" class="content-view col-12 d-none">
-            <div class="row g-4">
-              <div class="col-md-3">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5 class="card-title" id="total-users-stat">0</h5>
-                    <p class="card-text text-muted">Membros da Comunidade</p>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5 class="card-title" id="total-mentors-stat">0</h5>
-                    <p class="card-text text-muted">Mentores</p>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5 class="card-title" id="total-mentees-stat">0</h5>
-                    <p class="card-text text-muted">Mentees</p>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5 class="card-title" id="total-admins-stat">0</h5>
-                    <p class="card-text text-muted">Administradores</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="card mt-4">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="fs-5 mb-0">Gerenciamento de Usuários</h2>
-                <button class="btn btn-primary btn-sm" id="btn-add-user"><i class="bi bi-plus-circle"></i> Adicionar Usuário</button>
-              </div>
-              <div class="card-body" id="user-list-container"><ul id="users-list-ul" class="list-group list-group-flush"></ul></div>
-            </div>
-          </section>
-        </div>
-    </main>
+        </main>
+    </div>
   </div>
 
   <div class="modal fade" id="editProfileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5">Editar Perfil</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-edit-profile"><div class="mb-3"><label for="edit-name" class="form-label">Nome Completo</label><input type="text" id="edit-name" class="form-control" required></div><div class="mb-3"><label for="edit-bio" class="form-label">Sobre (visível para os mentees)</label><textarea id="edit-bio" class="form-control" rows="3" placeholder="Fale um pouco sobre você, suas experiências e áreas que pode ajudar."></textarea></div><div class="mb-3"><label for="edit-skills" class="form-label">Habilidades e Disciplinas</label><input type="text" id="edit-skills" class="form-control" placeholder="Ex: Cálculo I, Python, Liderança de Equipes"></div><div class="mb-3"><label for="edit-availability" class="form-label">Horários Disponíveis</label><textarea id="edit-availability" class="form-control" rows="3" placeholder="Ex:
