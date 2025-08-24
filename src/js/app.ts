@@ -403,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function () {
             '<div class="small text-muted mb-2">Ainda não avaliado</div>';
         const skillBadges = mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('');
         return `
-            <div class="col-md-6 col-lg-4">
+            <div class="col-12 col-md-6 col-lg-4">
                 <div class="card mentor-card h-100 shadow-sm text-center">
                     <div class="card-body d-flex flex-column">
                         <img src="${getAvatarUrl(mentor)}" class="rounded-circle mb-3 mx-auto" style="width: 90px; height: 90px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
@@ -813,6 +813,7 @@ document.addEventListener('DOMContentLoaded', function () {
             calendar.destroy();
         }
 
+        const isMobile = window.innerWidth < 768;
         const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
         
         const calendarEvents = myAppointments.map(app => {
@@ -845,9 +846,11 @@ document.addEventListener('DOMContentLoaded', function () {
             locale: 'pt-br',
             buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
             allDayText: 'Dia',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+            headerToolbar: isMobile 
+                ? { left: 'prev,next', center: 'title', right: 'today' }
+                : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
             height: '100%',
-            initialView: 'dayGridMonth',
+            initialView: isMobile ? 'listWeek' : 'dayGridMonth',
             events: calendarEvents,
             eventClick: function (info: EventClickArg) {
                 const eventBody = `
@@ -945,15 +948,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="list-group-item d-flex align-items-center gap-3">
                         <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="45" height="45" alt="Avatar">
                         <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
-                                <small class="text-muted">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
-                            </div>
+                            <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
                             <small class="d-block text-muted">Tópico: ${app.topic}</small>
                         </div>
-                        <div class="d-flex flex-column align-items-end gap-2">
-                            ${statusBadge}
-                            <div class="d-flex">
+                        <div class="text-end">
+                            <small class="text-muted d-block">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                            <div class="mt-1">
+                                ${statusBadge}
+                            </div>
+                            <div class="mt-2">
                                 ${actionButtons}
                             </div>
                         </div>
