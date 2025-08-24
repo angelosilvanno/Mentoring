@@ -1039,18 +1039,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 let actionButtons = '';
                 if (app.status === 'pendente') {
                     actionButtons = `
-                        <button class="btn btn-success btn-sm me-2 btn-accept-appointment" data-id="${app.id}">Aceitar</button>
-                        <button class="btn btn-danger btn-sm btn-decline-appointment" data-id="${app.id}">Recusar</button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-success btn-sm btn-accept-appointment" data-id="${app.id}">Aceitar</button>
+                            <button class="btn btn-danger btn-sm btn-decline-appointment" data-id="${app.id}">Recusar</button>
+                        </div>
                     `;
                 } else if (app.status === 'aceito') {
                     actionButtons = `
-                        <button class="btn btn-outline-secondary btn-sm btn-edit-appointment" data-id="${app.id}">Editar</button>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill bg-success">aceito</span>
+                            <button class="btn btn-outline-secondary btn-sm py-0 px-1 btn-edit-appointment" data-id="${app.id}" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                        </div>
                     `;
                 }
-
-                const statusBadge = app.status === 'pendente' 
-                    ? `<span class="badge bg-warning text-dark">${app.status}</span>`
-                    : `<span class="badge bg-success">${app.status}</span>`;
 
                 upcomingList.innerHTML += `
                     <div class="list-group-item d-flex flex-column flex-sm-row align-items-sm-center gap-3">
@@ -1061,8 +1064,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         <div class="text-sm-end mt-2 mt-sm-0">
                             <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} às ${app.time}</div>
-                            <div>${statusBadge}</div>
-                            ${actionButtons}
+                            <div class="mt-2">
+                               ${actionButtons}
+                            </div>
                         </div>
                     </div>
                 `;
