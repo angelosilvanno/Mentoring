@@ -69,7 +69,6 @@ interface ForumTopic {
 
 document.addEventListener('DOMContentLoaded', function () {
     // --- Seletores de Elementos DOM ---
-    const mobileHeaderTitle = document.getElementById('mobile-header-title') as HTMLElement;
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
@@ -81,7 +80,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const logoutBtn = document.getElementById('btn-logout') as HTMLButtonElement;
     const views = document.querySelectorAll<HTMLElement>('.content-view');
     const sidebar = document.getElementById('app-sidebar') as HTMLElement;
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop') as HTMLElement;
     const toggleSidebarBtn = document.getElementById('btn-toggle-sidebar') as HTMLButtonElement;
+    const closeSidebarBtn = document.getElementById('btn-close-sidebar') as HTMLButtonElement;
     const sidebarUsername = document.getElementById('sidebar-username') as HTMLSpanElement;
     const sidebarAvatar = document.getElementById('sidebar-avatar') as HTMLImageElement;
     const mentorsListContainer = document.getElementById('mentors-list-container') as HTMLElement;
@@ -120,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
+    const mobileHeaderTitle = document.getElementById('mobile-header-title') as HTMLElement;
     const toastElement = document.getElementById('appToast') as HTMLElement;
     const appToast = new bootstrap.Toast(toastElement, { delay: 4000 });
     const confirmModalElement = document.getElementById('confirmModal') as HTMLElement;
@@ -1222,6 +1224,16 @@ document.addEventListener('DOMContentLoaded', function () {
         requestMentorshipModal.show();
     });
 
+    closeSidebarBtn.addEventListener('click', () => {
+      sidebar.classList.remove('show');
+      sidebarBackdrop.classList.add('d-none');
+   });
+
+    sidebarBackdrop.addEventListener('click', () => {
+     sidebar.classList.remove('show');
+     sidebarBackdrop.classList.add('d-none');
+    });
+ 
     composeMessageForm.addEventListener('submit', handleSendMessage);
     requestMentorshipForm.addEventListener('submit', handleRequestMentorshipSubmit);
     feedbackForm.addEventListener('submit', handleFeedbackSubmit);

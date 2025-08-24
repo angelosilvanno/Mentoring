@@ -67,22 +67,25 @@
 
   <div id="app-wrapper" class="d-none">
     <aside id="app-sidebar">
-      <div class="sidebar-profile"><img id="sidebar-avatar" src="" class="rounded-circle" alt="Avatar do Usuário"><div class="sidebar-user-info"><span id="sidebar-username"></span><button id="btn-edit-profile" class="btn btn-sm btn-link p-0">Editar perfil</button></div></div>
-      <ul class="nav flex-column sidebar-nav">
-        <li class="nav-item" id="nav-dashboard"><a href="#" class="nav-link" data-view="dashboard-section">
-          <i class="bi bi-house-door"></i> Início</a></li>
-        <li class="nav-item" id="nav-buscar-mentores"><a href="#" class="nav-link" data-view="buscar-mentores-section">
-          <i class="bi bi-search"></i> Buscar Mentores</a></li>
-        <li class="nav-item" id="nav-agendamentos"><a href="#" class="nav-link" data-view="agendamento-section">
-          <i class="bi bi-calendar-check"></i> Agendamentos</a></li>
-        <li class="nav-item" id="nav-mensagens"><a href="#" class="nav-link" data-view="mensagem-section">
-          <i class="bi bi-chat-left-text"></i> Mensagens</a></li>
-        <li class="nav-item" id="nav-forum"><a href="#" class="nav-link" data-view="forum-section">
-          <i class="bi bi-people"></i> Fórum</a></li>
-        <li class="nav-item d-none" id="nav-admin"><a href="#" class="nav-link" data-view="admin-panel">
-          <i class="bi bi-sliders"></i> Administração</a></li>
-      </ul>
-      <div class="sidebar-footer mt-auto"><button id="btn-logout" class="btn btn-outline-secondary w-100">Sair</button></div>
+        <div class="d-flex justify-content-end d-lg-none mb-3">
+            <button class="btn btn-close" id="btn-close-sidebar" type="button" aria-label="Close"></button>
+        </div>
+        <div class="sidebar-profile"><img id="sidebar-avatar" src="" class="rounded-circle" alt="Avatar do Usuário"><div class="sidebar-user-info"><span id="sidebar-username"></span><button id="btn-edit-profile" class="btn btn-sm btn-link p-0">Editar perfil</button></div></div>
+        <ul class="nav flex-column sidebar-nav">
+            <li class="nav-item" id="nav-dashboard"><a href="#" class="nav-link" data-view="dashboard-section">
+              <i class="bi bi-house-door"></i> Início</a></li>
+            <li class="nav-item" id="nav-buscar-mentores"><a href="#" class="nav-link" data-view="buscar-mentores-section">
+              <i class="bi bi-search"></i> Buscar Mentores</a></li>
+            <li class="nav-item" id="nav-agendamentos"><a href="#" class="nav-link" data-view="agendamento-section">
+              <i class="bi bi-calendar-check"></i> Agendamentos</a></li>
+            <li class="nav-item" id="nav-mensagens"><a href="#" class="nav-link" data-view="mensagem-section">
+              <i class="bi bi-chat-left-text"></i> Mensagens</a></li>
+            <li class="nav-item" id="nav-forum"><a href="#" class="nav-link" data-view="forum-section">
+              <i class="bi bi-people"></i> Fórum</a></li>
+            <li class="nav-item d-none" id="nav-admin"><a href="#" class="nav-link" data-view="admin-panel">
+              <i class="bi bi-sliders"></i> Administração</a></li>
+        </ul>
+        <div class="sidebar-footer mt-auto"><button id="btn-logout" class="btn btn-outline-secondary w-100">Sair</button></div>
     </aside>
 
     <div id="sidebar-backdrop" class="d-none"></div>
