@@ -9,7 +9,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
-// --- Definições de Tipo (Interfaces) ---
 interface User {
   id: number;
   username: string;
@@ -68,15 +67,20 @@ interface ForumTopic {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Seletores de Elementos DOM ---
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
     const registerSection = document.getElementById('cadastro-section') as HTMLElement;
+    const forgotPasswordSection = document.getElementById('forgot-password-section') as HTMLElement;
+    const resetPasswordSection = document.getElementById('reset-password-section') as HTMLElement;
     const loginForm = document.getElementById('form-login') as HTMLFormElement;
     const registerForm = document.getElementById('form-cadastro') as HTMLFormElement;
+    const forgotPasswordForm = document.getElementById('form-forgot-password') as HTMLFormElement;
+    const resetPasswordForm = document.getElementById('form-reset-password') as HTMLFormElement;
     const showRegisterBtn = document.getElementById('btn-show-register-form') as HTMLButtonElement;
     const showLoginBtn = document.getElementById('btn-show-login-form') as HTMLButtonElement;
+    const showForgotPasswordBtn = document.getElementById('btn-forgot-password') as HTMLAnchorElement;
+    const backToLoginBtn = document.getElementById('btn-back-to-login') as HTMLButtonElement;
     const logoutBtn = document.getElementById('btn-logout') as HTMLButtonElement;
     const views = document.querySelectorAll<HTMLElement>('.content-view');
     const sidebar = document.getElementById('app-sidebar') as HTMLElement;
@@ -129,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
     const appInfoModal = new bootstrap.Modal(infoModalElement);
     
-    // --- Estado da Aplicação ---
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
@@ -137,8 +140,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
     let currentOpenTopicId: number | null = null;
+    let userToResetPasswordId: number | null = null;
 
-    // --- Funções de Persistência de Dados ---
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
     function saveMessages(): void { localStorage.setItem('mentoring_messages', JSON.stringify(messages)); }
@@ -146,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function setCurrentUser(user: User): void { currentUser = user; sessionStorage.setItem('mentoring_currentUser', JSON.stringify(user)); }
     function clearCurrentUser(): void { currentUser = null; sessionStorage.removeItem('mentoring_currentUser'); }
 
-    // --- Funções Utilitárias de UI ---
     function showToast(message: string, type: 'success' | 'danger' | 'warning' | 'info' = 'info'): void {
         const toastBody = document.getElementById('toastBody') as HTMLElement;
         const toastTitle = document.getElementById('toastTitle') as HTMLElement;
@@ -199,7 +201,6 @@ document.addEventListener('DOMContentLoaded', function () {
         appInfoModal.show();
     }
 
-    // --- Lógica Principal da Aplicação ---
     function getAvatarUrl(user: User | null | undefined): string {
         if (!user || !user.email) return '';
         const seed = encodeURIComponent(user.email);
@@ -558,12 +559,76 @@ document.addEventListener('DOMContentLoaded', function () {
     
     function showLoginFormView(): void {
         registerSection.classList.add('d-none');
+        forgotPasswordSection.classList.add('d-none');
+        resetPasswordSection.classList.add('d-none');
         loginContainer.classList.remove('d-none');
     }
 
     function showRegisterFormView(): void {
         loginContainer.classList.add('d-none');
+        forgotPasswordSection.classList.add('d-none');
+        resetPasswordSection.classList.add('d-none');
         registerSection.classList.remove('d-none');
+    }
+
+    function showForgotPasswordView(): void {
+        loginContainer.classList.add('d-none');
+        registerSection.classList.add('d-none');
+        resetPasswordSection.classList.add('d-none');
+        forgotPasswordSection.classList.remove('d-none');
+    }
+
+    function showResetPasswordView(): void {
+        loginContainer.classList.add('d-none');
+        registerSection.classList.add('d-none');
+        forgotPasswordSection.classList.add('d-none');
+        resetPasswordSection.classList.remove('d-none');
+    }
+
+    function handleForgotPasswordRequest(e: SubmitEvent) {
+        e.preventDefault();
+        const email = (forgotPasswordForm.querySelector('input[name="email"]') as HTMLInputElement).value;
+        const user = users.find(u => u.email === email);
+    
+        if (user) {
+            userToResetPasswordId = user.id;
+            showToast('Usuário encontrado! Por favor, defina uma nova senha.', 'success');
+            showResetPasswordView();
+        } else {
+            showToast('Se o e-mail estiver correto, instruções foram enviadas.', 'info');
+            showLoginFormView();
+        }
+        forgotPasswordForm.reset();
+    }
+
+    function handlePasswordReset(e: SubmitEvent) {
+        e.preventDefault();
+        if (userToResetPasswordId === null) return;
+    
+        const newPassword = (resetPasswordForm.querySelector('input[name="newPassword"]') as HTMLInputElement).value;
+        const confirmPassword = (resetPasswordForm.querySelector('input[name="confirmPassword"]') as HTMLInputElement).value;
+    
+        if (newPassword.length < 6) {
+            showToast('A nova senha deve ter no mínimo 6 caracteres.', 'warning');
+            return;
+        }
+    
+        if (newPassword !== confirmPassword) {
+            showToast('As senhas não coincidem.', 'danger');
+            return;
+        }
+    
+        const userIndex = users.findIndex(u => u.id === userToResetPasswordId);
+        if (userIndex !== -1) {
+            users[userIndex].password = newPassword;
+            saveUsers();
+            showToast('Senha redefinida com sucesso! Você já pode fazer o login.', 'success');
+            userToResetPasswordId = null;
+            resetPasswordForm.reset();
+            showLoginFormView();
+        } else {
+            showToast('Ocorreu um erro ao redefinir a senha.', 'danger');
+        }
     }
 
     function handleRequestMentorshipSubmit(e: SubmitEvent) {
@@ -1098,6 +1163,10 @@ document.addEventListener('DOMContentLoaded', function () {
             appWrapper.classList.remove('d-none');
             appWrapper.classList.add('d-flex');
             updateDashboardUI(currentUser);
+            toggleSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.add('show');
+                sidebarBackdrop.classList.remove('d-none');
+            });
         } else {
             authWrapper.classList.remove('d-none');
             appWrapper.classList.add('d-none');
@@ -1114,8 +1183,14 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.reload();
     });
 
-    toggleSidebarBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('show');
+    closeSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        sidebarBackdrop.classList.add('d-none');
+    });
+
+    sidebarBackdrop.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        sidebarBackdrop.classList.add('d-none');
     });
 
     editProfileBtn.addEventListener('click', () => {
@@ -1141,6 +1216,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (view) {
                 switchView(view);
                 sidebar.classList.remove('show');
+                sidebarBackdrop.classList.add('d-none');
             }
         });
     });
@@ -1224,16 +1300,16 @@ document.addEventListener('DOMContentLoaded', function () {
         requestMentorshipModal.show();
     });
 
-    closeSidebarBtn.addEventListener('click', () => {
-      sidebar.classList.remove('show');
-      sidebarBackdrop.classList.add('d-none');
-   });
-
-    sidebarBackdrop.addEventListener('click', () => {
-     sidebar.classList.remove('show');
-     sidebarBackdrop.classList.add('d-none');
+    showForgotPasswordBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showForgotPasswordView();
     });
- 
+
+    backToLoginBtn.addEventListener('click', showLoginFormView);
+
+    forgotPasswordForm.addEventListener('submit', handleForgotPasswordRequest);
+    resetPasswordForm.addEventListener('submit', handlePasswordReset);
+
     composeMessageForm.addEventListener('submit', handleSendMessage);
     requestMentorshipForm.addEventListener('submit', handleRequestMentorshipSubmit);
     feedbackForm.addEventListener('submit', handleFeedbackSubmit);

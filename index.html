@@ -23,7 +23,7 @@
             <button type="submit" class="btn btn-primary btn-lg fw-bold">Entrar</button>
           </form>
           <div class="text-center my-3">
-            <a href="#" class="text-decoration-none small">Esqueceu a senha?</a>
+            <a href="#" id="btn-forgot-password" class="text-decoration-none small">Esqueceu a senha?</a>
           </div>
           <hr>
           <div class="text-center">
@@ -60,6 +60,23 @@
             <div class="col-12"><button type="submit" class="btn btn-primary fw-bold w-100">Cadastrar</button></div>
           </form>
           <p class="small text-center text-muted mt-3">Já tem uma conta? <button id="btn-show-login-form" class="btn btn-link p-0 fw-semibold">Faça Login</button></p>
+        </section>
+        <section id="forgot-password-section" class="mt-4 d-none">
+            <h2 class="fs-4 text-center fw-bold mb-3">Recuperar Senha</h2>
+            <p class="text-center text-muted small mb-4">Digite o e-mail associado à sua conta e enviaremos as instruções.</p>
+            <form id="form-forgot-password" class="d-grid gap-3">
+              <input type="email" name="email" class="form-control form-control-lg" placeholder="Seu e-mail" required />
+              <button type="submit" class="btn btn-primary btn-lg fw-bold">Enviar</button>
+            </form>
+            <p class="small text-center text-muted mt-3"><button id="btn-back-to-login" class="btn btn-link p-0 fw-semibold">Voltar para o Login</button></p>
+        </section>
+        <section id="reset-password-section" class="mt-4 d-none">
+            <h2 class="fs-4 text-center fw-bold mb-3">Redefinir Senha</h2>
+            <form id="form-reset-password" class="d-grid gap-3">
+                <input type="password" name="newPassword" class="form-control form-control-lg" placeholder="Nova Senha (mín. 6 caracteres)" required minlength="6"/>
+                <input type="password" name="confirmPassword" class="form-control form-control-lg" placeholder="Confirmar Nova Senha" required minlength="6"/>
+                <button type="submit" class="btn btn-primary btn-lg fw-bold">Salvar Nova Senha</button>
+            </form>
         </section>
       </div>
     </div>
