@@ -942,15 +942,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     : `<span class="badge bg-success">${app.status}</span>`;
 
                 upcomingList.innerHTML += `
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h5>
-                            <small>${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                    <div class="list-group-item d-flex align-items-center gap-3">
+                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="45" height="45" alt="Avatar">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
+                                <small class="text-muted">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                            </div>
+                            <small class="d-block text-muted">Tópico: ${app.topic}</small>
                         </div>
-                        <p class="mb-1"><strong>Tópico:</strong> ${app.topic}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <small>Status: ${statusBadge}</small>
-                            <div>
+                        <div class="d-flex flex-column align-items-end gap-2">
+                            ${statusBadge}
+                            <div class="d-flex">
                                 ${actionButtons}
                             </div>
                         </div>
@@ -971,13 +974,16 @@ document.addEventListener('DOMContentLoaded', function () {
             pastAppointments.forEach(app => {
                 const mentee = users.find(u => u.id === app.menteeId);
                 pastAppointmentsList.innerHTML += `
-                    <div class="list-group-item">
-                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h5>
-                            <small>${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                    <div class="list-group-item d-flex align-items-center gap-3">
+                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="45" height="45" alt="Avatar">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
+                                <small class="text-muted">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                            </div>
+                            <small class="d-block text-muted">Tópico: ${app.topic}</small>
                         </div>
-                        <p class="mb-1"><strong>Tópico:</strong> ${app.topic}</p>
-                        <small>Status: <span class="badge bg-secondary">${app.status}</span></small>
+                        <span class="badge bg-secondary">${app.status}</span>
                     </div>
                 `;
             });
