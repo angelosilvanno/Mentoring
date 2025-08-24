@@ -612,6 +612,54 @@ document.addEventListener('DOMContentLoaded', function () {
         switchView('mensagem-section');
     }
     
+    function processPostContent(content: string): string {
+        const youtubeVideoRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/;
+    
+        let processedContent = content;
+    
+        const playlistMatch = processedContent.match(youtubePlaylistRegex);
+        if (playlistMatch && playlistMatch[1]) {
+            const playlistId = playlistMatch[1];
+            const embedHtml = `
+                <div class="youtube-embed-container my-3">
+                    <iframe 
+                        width="100%" 
+                        height="315" 
+                        src="https://www.youtube.com/embed/videoseries?list=${playlistId}" 
+                        title="YouTube video player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            processedContent = processedContent.replace(youtubePlaylistRegex, embedHtml);
+            return processedContent;
+        }
+    
+        const videoMatch = processedContent.match(youtubeVideoRegex);
+        if (videoMatch && videoMatch[1]) {
+            const videoId = videoMatch[1];
+            const embedHtml = `
+                <div class="youtube-embed-container my-3">
+                    <iframe 
+                        width="100%" 
+                        height="315" 
+                        src="https://www.youtube.com/embed/${videoId}" 
+                        title="YouTube video player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            processedContent = processedContent.replace(youtubeVideoRegex, embedHtml);
+        }
+    
+        return processedContent;
+    }
+
     function renderForumTopics() {
         const container = document.querySelector('#forum-card-body .list-group') as HTMLElement;
         container.innerHTML = '';
@@ -619,9 +667,20 @@ document.addEventListener('DOMContentLoaded', function () {
             container.innerHTML = '<p class="text-muted">Ainda não há tópicos no fórum. Seja o primeiro a criar um!</p>';
             return;
         }
+        
         forumTopics.sort((a: ForumTopic, b: ForumTopic) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).forEach(topic => {
             const author = users.find(u => u.id === topic.authorId);
-            container.innerHTML += `<a href="#" class="list-group-item list-group-item-action" data-topic-id="${topic.id}"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">${topic.title}</h5><small>${new Date(topic.createdAt).toLocaleDateString()}</small></div><p class="mb-1">${topic.body.substring(0, 150)}...</p><small>Por ${author ? author.name : 'Usuário Removido'} • ${topic.replies.length} respostas</small></a>`;
+            const processedBody = processPostContent(topic.body);
+    
+            container.innerHTML += `
+                <a href="#" class="list-group-item list-group-item-action" data-topic-id="${topic.id}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${topic.title}</h5>
+                        <small>${new Date(topic.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <div class="forum-post-body mt-2">${processedBody}</div> 
+                    <small class="d-block mt-2">Por ${author ? author.name : 'Usuário Removido'} • ${topic.replies.length} respostas</small>
+                </a>`;
         });
     }
 
