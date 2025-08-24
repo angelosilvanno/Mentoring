@@ -79,12 +79,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const showLoginBtn = document.getElementById('btn-show-login-form') as HTMLButtonElement;
     const logoutBtn = document.getElementById('btn-logout') as HTMLButtonElement;
     const views = document.querySelectorAll<HTMLElement>('.content-view');
+    const sidebar = document.getElementById('app-sidebar') as HTMLElement;
+    const toggleSidebarBtn = document.getElementById('btn-toggle-sidebar') as HTMLButtonElement;
     const sidebarUsername = document.getElementById('sidebar-username') as HTMLSpanElement;
     const sidebarAvatar = document.getElementById('sidebar-avatar') as HTMLImageElement;
     const mentorsListContainer = document.getElementById('mentors-list-container') as HTMLElement;
     const searchMentorInput = document.getElementById('search-mentor-input') as HTMLInputElement;
     const userListUl = document.getElementById('users-list-ul') as HTMLUListElement;
     const navItems: { [key: string]: HTMLElement | null } = {
+        dashboard: document.getElementById('nav-dashboard'),
         buscar: document.getElementById('nav-buscar-mentores'),
         agendamentos: document.getElementById('nav-agendamentos'),
         mensagens: document.getElementById('nav-mensagens'),
@@ -279,11 +282,12 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.values(navItems).forEach(item => item?.classList.add('d-none'));
 
         if (user.role === 'mentee') {
+            navItems.dashboard?.classList.remove('d-none');
             navItems.buscar?.classList.remove('d-none');
             navItems.agendamentos?.classList.remove('d-none');
             navItems.mensagens?.classList.remove('d-none');
             navItems.forum?.classList.remove('d-none');
-            switchView('buscar-mentores-section');
+            switchView('dashboard-section');
         } else if (user.role === 'mentor') {
             navItems.agendamentos?.classList.remove('d-none');
             navItems.mensagens?.classList.remove('d-none');
@@ -995,6 +999,61 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function renderMenteeDashboard(): void {
+        if (!currentUser || currentUser.role !== 'mentee') return;
+    
+        const nextAppointmentContainer = document.getElementById('dashboard-next-appointment') as HTMLElement;
+        const recentMentorsContainer = document.getElementById('dashboard-recent-mentors') as HTMLElement;
+        const suggestedMentorsContainer = document.getElementById('dashboard-suggested-mentors') as HTMLElement;
+    
+        const myAppointments = appointments.filter(app => app.menteeId === currentUser!.id);
+       const nextAppointment = myAppointments
+         .filter(app => app.status === 'aceito' && new Date(`${app.date}T${app.time}`) >= new Date())
+        .sort((a: Appointment, b: Appointment) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())[0];
+    
+        if (nextAppointment) {
+            const mentor = users.find(u => u.id === nextAppointment.mentorId);
+            nextAppointmentContainer.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <img src="${getAvatarUrl(mentor)}" class="rounded-circle me-3" width="50" height="50">
+                    <div>
+                        <h6 class="mb-0">Mentoria com ${mentor ? mentor.name : 'Desconhecido'}</h6>
+                        <p class="mb-0 text-muted">${new Date(nextAppointment.date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })} às ${nextAppointment.time}</p>
+                        <p class="mb-0 small"><strong>Tópico:</strong> ${nextAppointment.topic}</p>
+                    </div>
+                </div>`;
+        } else {
+            nextAppointmentContainer.innerHTML = '<p class="text-muted">Nenhum próximo encontro agendado.</p>';
+        }
+    
+        const recentMentorIds = [...new Set(myAppointments.map(app => app.mentorId))].slice(0, 3);
+        recentMentorsContainer.innerHTML = '';
+        if (recentMentorIds.length > 0) {
+            recentMentorIds.forEach(mentorId => {
+                const mentor = users.find(u => u.id === mentorId);
+                if (mentor) {
+                    recentMentorsContainer.innerHTML += `
+                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                            <img src="${getAvatarUrl(mentor)}" class="rounded-circle" width="35" height="35">
+                            <span>${mentor.name}</span>
+                        </a>`;
+                }
+            });
+        } else {
+            recentMentorsContainer.innerHTML = '<p class="text-muted p-3">Nenhuma interação recente.</p>';
+        }
+    
+        const suggestedMentors = users.filter(user => user.role === 'mentor' && user.course === currentUser!.course && user.id !== currentUser!.id).slice(0, 3);
+        suggestedMentorsContainer.innerHTML = '';
+        if (suggestedMentors.length > 0) {
+            suggestedMentors.forEach(mentor => {
+                suggestedMentorsContainer.innerHTML += buildMentorCard(mentor);
+            });
+        } else {
+            suggestedMentorsContainer.innerHTML = '<div class="col-12"><p class="text-muted text-center">Nenhum mentor sugerido no momento.</p></div>';
+        }
+    }
+
     function switchView(targetViewId: string): void {
         if (!currentUser) return;
         document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
@@ -1022,6 +1081,8 @@ document.addEventListener('DOMContentLoaded', function () {
             renderForumTopics();
         } else if (targetViewId === 'buscar-mentores-section') {
             renderDiscoveryPage();
+        } else if (targetViewId === 'dashboard-section') {
+            renderMenteeDashboard();
         }
     }
 
@@ -1047,6 +1108,10 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.reload();
     });
 
+    toggleSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+    });
+
     editProfileBtn.addEventListener('click', () => {
         if (!currentUser) return;
         (document.getElementById('edit-name') as HTMLInputElement).value = currentUser.name;
@@ -1069,6 +1134,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const view = (e.currentTarget as HTMLElement).dataset.view;
             if (view) {
                 switchView(view);
+                sidebar.classList.remove('show');
             }
         });
     });
