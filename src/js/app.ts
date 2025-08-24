@@ -111,6 +111,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const createTopicBtn = document.getElementById('btn-create-topic') as HTMLButtonElement;
     const createTopicModal = new bootstrap.Modal(document.getElementById('createTopicModal') as HTMLElement);
     const createTopicForm = document.getElementById('form-create-topic') as HTMLFormElement;
+    const viewTopicModal = new bootstrap.Modal(document.getElementById('viewTopicModal') as HTMLElement);
+    const replyTopicForm = document.getElementById('form-reply-topic') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
@@ -128,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let forumTopics: ForumTopic[] = JSON.parse(localStorage.getItem('mentoring_forum_topics') || '[]');
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
+    let currentOpenTopicId: number | null = null;
 
     // --- Funções de Persistência de Dados ---
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
@@ -191,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- Lógica Principal da Aplicação ---
-    function getAvatarUrl(user: User | null): string {
+    function getAvatarUrl(user: User | null | undefined): string {
         if (!user || !user.email) return '';
         const seed = encodeURIComponent(user.email);
         if (user.gender === 'feminino') return `https://api.dicebear.com/8.x/personas/svg?seed=${seed}&face=variant1,variant2,variant3,variant4,variant5`;
@@ -616,12 +619,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const youtubeVideoRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
         const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/;
     
-        let processedContent = content;
-    
-        const playlistMatch = processedContent.match(youtubePlaylistRegex);
+        const playlistMatch = content.match(youtubePlaylistRegex);
         if (playlistMatch && playlistMatch[1]) {
             const playlistId = playlistMatch[1];
-            const embedHtml = `
+            return `
                 <div class="youtube-embed-container my-3">
                     <iframe 
                         width="100%" 
@@ -634,14 +635,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     </iframe>
                 </div>
             `;
-            processedContent = processedContent.replace(youtubePlaylistRegex, embedHtml);
-            return processedContent;
         }
     
-        const videoMatch = processedContent.match(youtubeVideoRegex);
+        const videoMatch = content.match(youtubeVideoRegex);
         if (videoMatch && videoMatch[1]) {
             const videoId = videoMatch[1];
-            const embedHtml = `
+            return `
                 <div class="youtube-embed-container my-3">
                     <iframe 
                         width="100%" 
@@ -654,10 +653,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     </iframe>
                 </div>
             `;
-            processedContent = processedContent.replace(youtubeVideoRegex, embedHtml);
         }
     
-        return processedContent;
+        return content;
     }
 
     function renderForumTopics() {
@@ -718,6 +716,95 @@ document.addEventListener('DOMContentLoaded', function () {
         createTopicForm.reset();
         createTopicModal.hide();
         renderForumTopics();
+    }
+
+    function renderTopicView(topicId: number): void {
+        const topic = forumTopics.find(t => t.id === topicId);
+        if (!topic) {
+            showToast('Tópico não encontrado.', 'danger');
+            return;
+        }
+    
+        currentOpenTopicId = topicId;
+    
+        const modalTitle = document.getElementById('view-topic-title') as HTMLElement;
+        modalTitle.textContent = topic.title;
+    
+        const repliesContainer = document.getElementById('topic-replies-container') as HTMLElement;
+        repliesContainer.innerHTML = '';
+    
+        const originalPostAuthor = users.find(u => u.id === topic.authorId);
+        const processedBody = processPostContent(topic.body);
+        const originalPostHtml = `
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="${getAvatarUrl(originalPostAuthor)}" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
+                        <div>
+                            <h6 class="mb-0">${originalPostAuthor ? originalPostAuthor.name : 'Usuário Removido'}</h6>
+                            <small class="text-muted">Postado em ${new Date(topic.createdAt).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                    <div class="forum-post-body">${processedBody}</div>
+                </div>
+            </div>
+            <h5 class="mb-3">Respostas (${topic.replies.length})</h5>
+        `;
+        repliesContainer.innerHTML += originalPostHtml;
+    
+        if (topic.replies.length > 0) {
+            topic.replies.forEach(reply => {
+                const replyAuthor = users.find(u => u.id === reply.authorId);
+                const replyHtml = `
+                    <div class="d-flex align-items-start mb-3">
+                        <img src="${getAvatarUrl(replyAuthor)}" class="rounded-circle me-3" width="35" height="35" alt="Avatar">
+                        <div class="w-100">
+                            <div class="bg-light p-3 rounded">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1 small">${replyAuthor ? replyAuthor.name : 'Usuário Removido'}</h6>
+                                    <small class="text-muted">${new Date(reply.createdAt).toLocaleDateString()}</small>
+                                </div>
+                                <p class="mb-0 small">${reply.body}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                repliesContainer.innerHTML += replyHtml;
+            });
+        } else {
+            repliesContainer.innerHTML += '<p class="text-center text-muted">Nenhuma resposta ainda. Seja o primeiro a comentar!</p>';
+        }
+    
+        viewTopicModal.show();
+    }
+
+    function handleReplyToTopic(e: SubmitEvent): void {
+        e.preventDefault();
+        if (!currentUser || currentOpenTopicId === null) return;
+    
+        const replyBodyInput = document.getElementById('reply-topic-body') as HTMLTextAreaElement;
+        const replyBody = replyBodyInput.value.trim();
+    
+        if (!replyBody) {
+            showToast('A resposta não pode estar vazia.', 'warning');
+            return;
+        }
+    
+        const topic = forumTopics.find(t => t.id === currentOpenTopicId);
+        if (topic) {
+            const newReply: ForumReply = {
+                id: Date.now(),
+                authorId: currentUser.id,
+                body: replyBody,
+                createdAt: new Date().toISOString()
+            };
+    
+            topic.replies.push(newReply);
+            saveForumTopics();
+            
+            replyTopicForm.reset();
+            renderTopicView(currentOpenTopicId);
+        }
     }
 
     function initCalendar(): void {
@@ -1023,6 +1110,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const forumListContainer = document.querySelector('#forum-card-body .list-group');
+    if (forumListContainer) {
+        forumListContainer.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = e.target as HTMLElement;
+            const topicLink = target.closest('.list-group-item-action');
+
+            if (topicLink) {
+                const topicId = parseInt(topicLink.getAttribute('data-topic-id')!, 10);
+                if (topicId) {
+                    renderTopicView(topicId);
+                }
+            }
+        });
+    }
+
     sendMessageFromProfileBtn.addEventListener('click', (e) => {
         const mentorId = parseInt((e.currentTarget as HTMLElement).dataset.mentorId!);
         const mentor = users.find(u => u.id === mentorId);
@@ -1045,6 +1148,7 @@ document.addEventListener('DOMContentLoaded', function () {
     feedbackForm.addEventListener('submit', handleFeedbackSubmit);
     createTopicBtn.addEventListener('click', () => createTopicModal.show());
     createTopicForm.addEventListener('submit', handleCreateTopic);
+    replyTopicForm.addEventListener('submit', handleReplyToTopic);
     
     init();
 });
