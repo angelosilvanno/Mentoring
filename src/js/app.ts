@@ -1,3 +1,8 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import * as bootstrap from 'bootstrap';
+import '/src/css/style.css';
+import '/src/css/calendar.css';
 import { Calendar, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -63,6 +68,7 @@ interface ForumTopic {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // --- Seletores de Elementos DOM ---
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
     const loginContainer = document.getElementById('login-container') as HTMLElement;
@@ -86,45 +92,36 @@ document.addEventListener('DOMContentLoaded', function () {
         admin: document.getElementById('nav-admin'),
     };
     const editProfileBtn = document.getElementById('btn-edit-profile') as HTMLButtonElement;
-    // @ts-ignore - Supõe que 'bootstrap' existe globalmente. Para um projeto com bundler, seria 'import * as bootstrap from 'bootstrap';'
-    const editProfileModal = new window.bootstrap.Modal(document.getElementById('editProfileModal') as HTMLElement);
+    const editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal') as HTMLElement);
     const editProfileForm = document.getElementById('form-edit-profile') as HTMLFormElement;
     const addUserBtn = document.getElementById('btn-add-user') as HTMLButtonElement;
-    // @ts-ignore
-    const addUserModal = new window.bootstrap.Modal(document.getElementById('addUserModal') as HTMLElement);
+    const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal') as HTMLElement);
     const addUserForm = document.getElementById('form-add-user') as HTMLFormElement;
-    // @ts-ignore
-    const viewProfileModal = new window.bootstrap.Modal(document.getElementById('viewProfileModal') as HTMLElement);
+    const viewProfileModal = new bootstrap.Modal(document.getElementById('viewProfileModal') as HTMLElement);
     const requestMentorshipBtn = document.getElementById('btn-request-mentorship') as HTMLButtonElement;
     const sendMessageFromProfileBtn = document.getElementById('btn-send-message-from-profile') as HTMLButtonElement;
-    // @ts-ignore
-    const composeMessageModal = new window.bootstrap.Modal(document.getElementById('composeMessageModal') as HTMLElement);
+    const composeMessageModal = new bootstrap.Modal(document.getElementById('composeMessageModal') as HTMLElement);
     const composeMessageForm = document.getElementById('form-compose-message') as HTMLFormElement;
     const conversationsListUl = document.getElementById('conversations-list-ul') as HTMLUListElement;
-    // @ts-ignore
-    const requestMentorshipModal = new window.bootstrap.Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
+    const requestMentorshipModal = new bootstrap.Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
     const requestMentorshipForm = document.getElementById('form-request-mentorship') as HTMLFormElement;
-    // @ts-ignore
-    const feedbackModal = new window.bootstrap.Modal(document.getElementById('feedbackModal') as HTMLElement);
+    const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal') as HTMLElement);
     const feedbackForm = document.getElementById('form-send-feedback') as HTMLFormElement;
     const feedbackStarsContainer = document.getElementById('feedback-stars') as HTMLElement;
     const createTopicBtn = document.getElementById('btn-create-topic') as HTMLButtonElement;
-    // @ts-ignore
-    const createTopicModal = new window.bootstrap.Modal(document.getElementById('createTopicModal') as HTMLElement);
+    const createTopicModal = new bootstrap.Modal(document.getElementById('createTopicModal') as HTMLElement);
     const createTopicForm = document.getElementById('form-create-topic') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
     const toastElement = document.getElementById('appToast') as HTMLElement;
-    // @ts-ignore
-    const appToast = new window.bootstrap.Toast(toastElement, { delay: 4000 });
+    const appToast = new bootstrap.Toast(toastElement, { delay: 4000 });
     const confirmModalElement = document.getElementById('confirmModal') as HTMLElement;
-    // @ts-ignore
-    const appConfirmModal = new window.bootstrap.Modal(confirmModalElement);
+    const appConfirmModal = new bootstrap.Modal(confirmModalElement);
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
-    // @ts-ignore
-    const appInfoModal = new window.bootstrap.Modal(infoModalElement);
+    const appInfoModal = new bootstrap.Modal(infoModalElement);
     
+    // --- Estado da Aplicação ---
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
@@ -132,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
 
+    // --- Funções de Persistência de Dados ---
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
     function saveMessages(): void { localStorage.setItem('mentoring_messages', JSON.stringify(messages)); }
@@ -139,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function setCurrentUser(user: User): void { currentUser = user; sessionStorage.setItem('mentoring_currentUser', JSON.stringify(user)); }
     function clearCurrentUser(): void { currentUser = null; sessionStorage.removeItem('mentoring_currentUser'); }
 
+    // --- Funções Utilitárias de UI ---
     function showToast(message: string, type: 'success' | 'danger' | 'warning' | 'info' = 'info'): void {
         const toastBody = document.getElementById('toastBody') as HTMLElement;
         const toastTitle = document.getElementById('toastTitle') as HTMLElement;
@@ -191,6 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
         appInfoModal.show();
     }
 
+    // --- Lógica Principal da Aplicação ---
     function getAvatarUrl(user: User | null): string {
         if (!user || !user.email) return '';
         const seed = encodeURIComponent(user.email);
@@ -249,7 +249,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const historyList = document.getElementById('modal-mentor-history-list') as HTMLUListElement;
         historyList.innerHTML = '';
-        // --- CORREÇÃO --- Adicionados tipos explícitos para 'a' e 'b' na função sort() para satisfazer a regra "strict".
         const completedAppointments = appointments.filter(a => a.mentorId === mentor.id && (a.status === 'realizado' || a.status === 'avaliado')).sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime());
         if (completedAppointments.length > 0) {
             completedAppointments.forEach(app => {
@@ -294,11 +293,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function handleLogin(e: SubmitEvent): void {
-     e.preventDefault();
-     const target = e.target as HTMLFormElement;
+        e.preventDefault();
+        const target = e.target as HTMLFormElement;
 
-     const loginIdentifier = (target.querySelector('input[name="loginIdentifier"]') as HTMLInputElement).value;
-     const password = (target.querySelector('input[type="password"]') as HTMLInputElement).value;
+        const loginIdentifier = (target.querySelector('input[name="loginIdentifier"]') as HTMLInputElement).value;
+        const password = (target.querySelector('input[type="password"]') as HTMLInputElement).value;
 
         const foundUser = users.find(user => 
           (user.email === loginIdentifier || user.username === loginIdentifier) && 
@@ -311,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           showToast('Identificador ou senha inválidos!', 'danger');
         }
-   }
+    }
 
     function handlePublicRegister(e: SubmitEvent): void {
         e.preventDefault();
@@ -325,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (users.some(user => user.username === userData.username)) {
            showToast('Este nome de usuário já está em uso.', 'danger');
            return;
-       }
+        }
         if (users.some(user => user.email === userData.email)) {
             showToast('Este e-mail já está em uso.', 'danger');
             return;
@@ -352,41 +351,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function handleAdminAddUser(e: SubmitEvent) {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const userData = Object.fromEntries(formData.entries());
+        e.preventDefault();
+        const formData = new FormData(e.target as HTMLFormElement);
+        const userData = Object.fromEntries(formData.entries());
 
-    if (!userData.fullName || !userData.username || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
-        showToast("Por favor, preencha todos os campos.", "warning"); return;
+        if (!userData.fullName || !userData.username || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
+            showToast("Por favor, preencha todos os campos.", "warning"); return;
+        }
+        
+        if (users.some(user => user.username === userData.username)) {
+            showToast('Este nome de usuário já está em uso.', 'danger'); return;
+        }
+        if (users.some(user => user.email === userData.email)) {
+            showToast('Este e-mail já está em uso.', 'danger'); return;
+        }
+        
+        const newUser: User = { 
+            id: Date.now(), 
+            username: String(userData.username), 
+            name: String(userData.fullName),
+            email: String(userData.email), 
+            password: String(userData.password), 
+            course: String(userData.course), 
+            role: userData.role as 'mentee' | 'mentor', 
+            gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
+            skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
+            bio: '', 
+            availability: '' 
+        };
+        users.push(newUser);
+        saveUsers();
+        showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
+        addUserForm.reset();
+        addUserModal.hide();
+        renderAdminDashboard();
     }
-    
-    if (users.some(user => user.username === userData.username)) {
-        showToast('Este nome de usuário já está em uso.', 'danger'); return;
-    }
-    if (users.some(user => user.email === userData.email)) {
-        showToast('Este e-mail já está em uso.', 'danger'); return;
-    }
-    
-    const newUser: User = { 
-        id: Date.now(), 
-        username: String(userData.username), 
-        name: String(userData.fullName),
-        email: String(userData.email), 
-        password: String(userData.password), 
-        course: String(userData.course), 
-        role: userData.role as 'mentee' | 'mentor', 
-        gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
-        skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
-        bio: '', 
-        availability: '' 
-    };
-     users.push(newUser);
-     saveUsers();
-     showToast(`Usuário ${newUser.name} criado com sucesso!`, 'success');
-     addUserForm.reset();
-     addUserModal.hide();
-     renderAdminDashboard();
-   }
 
     function buildMentorCard(mentor: User): string {
         const allRatings = appointments
@@ -445,7 +444,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return { ...mentor, averageRating, ratingCount: allRatings.length };
             })
             .filter(mentor => mentor.ratingCount > 0)
-            // --- CORREÇÃO --- Adicionados tipos explícitos para 'a' e 'b' na função sort().
             .sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount)
             .slice(0, 3);
         if (mentorsWithRatings.length > 0) {
@@ -479,9 +477,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderPopularTags(): void {
         if (!popularTagsContainer) return;
         const allSkills = users.filter(u => u.role === 'mentor' && u.skills).flatMap(u => u.skills);
-        // --- CORREÇÃO --- Adicionados tipos explícitos para o acumulador 'acc' e o item 'skill' na função reduce().
         const skillCounts = allSkills.reduce((acc: { [key: string]: number }, skill: string) => { acc[skill] = (acc[skill] || 0) + 1; return acc; }, {});
-        // --- CORREÇÃO --- Adicionados tipos explícitos para os parâmetros da função sort(). Cada item é uma tupla [string, number].
         const popularSkills = Object.entries(skillCounts).sort(([, a]: [string, number], [, b]: [string, number]) => b - a).slice(0, 5).map(([skill]) => skill);
         popularTagsContainer.innerHTML = '';
         if (popularSkills.length === 0) {
@@ -589,11 +585,9 @@ document.addEventListener('DOMContentLoaded', function () {
             conversationsListUl.innerHTML = '<li class="list-group-item text-muted text-center p-4">Nenhuma conversa iniciada.</li>';
             return;
         }
-        // --- CORREÇÃO --- Adicionados tipos explícitos para os parâmetros da função sort(). Cada item é uma tupla [number, string].
         const sortedPartners = [...conversationPartners.entries()].sort((a: [number, string], b: [number, string]) => new Date(b[1]).getTime() - new Date(a[1]).getTime());
         sortedPartners.forEach(([partnerId]) => {
             const partner = users.find(u => u.id === partnerId);
-            // --- CORREÇÃO --- Adicionados tipos explícitos para 'a' e 'b' na função sort().
             const lastMessage = messages.filter(m => (m.senderId === partnerId && m.receiverId === currentUser!.id) || (m.senderId === currentUser!.id && m.receiverId === partnerId)).sort((a: Message, b: Message) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
             
             if (partner && lastMessage) {
@@ -625,7 +619,6 @@ document.addEventListener('DOMContentLoaded', function () {
             container.innerHTML = '<p class="text-muted">Ainda não há tópicos no fórum. Seja o primeiro a criar um!</p>';
             return;
         }
-        // --- CORREÇÃO --- Adicionados tipos explícitos para 'a' e 'b' na função sort().
         forumTopics.sort((a: ForumTopic, b: ForumTopic) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).forEach(topic => {
             const author = users.find(u => u.id === topic.authorId);
             container.innerHTML += `<a href="#" class="list-group-item list-group-item-action" data-topic-id="${topic.id}"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">${topic.title}</h5><small>${new Date(topic.createdAt).toLocaleDateString()}</small></div><p class="mb-1">${topic.body.substring(0, 150)}...</p><small>Por ${author ? author.name : 'Usuário Removido'} • ${topic.replies.length} respostas</small></a>`;
@@ -669,68 +662,181 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initCalendar(): void {
-    if (!currentUser) return;
-    if (calendar) {
-        calendar.destroy();
-    }
-
-    const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
-    
-    const calendarEvents = myAppointments.map(app => {
-        const otherUserId = currentUser!.role === 'mentee' ? app.mentorId : app.menteeId;
-        const otherUser = users.find(u => u.id === otherUserId);
-
-        const eventTitle = otherUser 
-            ? `Mentoria com ${otherUser.name}` 
-            : 'Mentoria (Usuário Removido)';
-
-        let color = '#0d6efd';
-        if (app.status === 'pendente') color = '#ffc107';
-        if (app.status === 'aceito') color = '#198754';
-        if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
-
-        return {
-            id: app.id.toString(),
-            title: eventTitle,
-            start: `${app.date}T${app.time}`,
-            color: color,
-            extendedProps: {
-                topic: app.topic,
-                status: app.status
-            }
-        };
-    });
-
-    calendar = new Calendar(calendarContainer, {
-        plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
-        locale: 'pt-br',
-        buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
-        allDayText: 'Dia',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-        height: '100%',
-        initialView: 'dayGridMonth',
-        events: calendarEvents,
-        // --- CORREÇÃO --- Substituído 'any' pelo tipo correto 'EventClickArg' importado do FullCalendar.
-        eventClick: function (info: EventClickArg) {
-            const eventBody = `
-                <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
-                <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
-                <p><strong>Tópico:</strong> ${info.event.extendedProps.topic}</p>
-                <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${info.event.extendedProps.status}</span></p>
-            `;
-            showInfo('Detalhes do Encontro', eventBody);
+        if (!currentUser) return;
+        if (calendar) {
+            calendar.destroy();
         }
-    });
 
-      calendar.render();
-   }
+        const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
+        
+        const calendarEvents = myAppointments.map(app => {
+            const otherUserId = currentUser!.role === 'mentee' ? app.mentorId : app.menteeId;
+            const otherUser = users.find(u => u.id === otherUserId);
+
+            const eventTitle = otherUser 
+                ? `Mentoria com ${otherUser.name}` 
+                : 'Mentoria (Usuário Removido)';
+
+            let color = '#0d6efd';
+            if (app.status === 'pendente') color = '#ffc107';
+            if (app.status === 'aceito') color = '#198754';
+            if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
+
+            return {
+                id: app.id.toString(),
+                title: eventTitle,
+                start: `${app.date}T${app.time}`,
+                color: color,
+                extendedProps: {
+                    topic: app.topic,
+                    status: app.status
+                }
+            };
+        });
+
+        calendar = new Calendar(calendarContainer, {
+            plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
+            locale: 'pt-br',
+            buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
+            allDayText: 'Dia',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+            height: '100%',
+            initialView: 'dayGridMonth',
+            events: calendarEvents,
+            eventClick: function (info: EventClickArg) {
+                const eventBody = `
+                    <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
+                    <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                    <p><strong>Tópico:</strong> ${info.event.extendedProps.topic}</p>
+                    <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${info.event.extendedProps.status}</span></p>
+                `;
+                showInfo('Detalhes do Encontro', eventBody);
+            }
+        });
+        calendar.render();
+    }
 
     function renderAppointments(): void {
         if (!currentUser) return;
         if (currentUser.role === 'mentee') {
             initCalendar();
         } else if (currentUser.role === 'mentor') {
-            // Lógica completa de renderização para a visão do mentor.
+            renderMentorDashboard();
+        }
+    }
+
+    function handleAcceptAppointment(appId: number): void {
+        const appointment = appointments.find(app => app.id === appId);
+        if (appointment) {
+            appointment.status = 'aceito';
+            saveAppointments();
+            renderMentorDashboard();
+            showToast('Agendamento aceito com sucesso!', 'success');
+        }
+    }
+    
+    function handleDeclineAppointment(appId: number): void {
+        const appointment = appointments.find(app => app.id === appId);
+        if (appointment) {
+            const mentee = users.find(u => u.id === appointment.menteeId);
+            showConfirm(
+                'Recusar Agendamento',
+                `Tem certeza que deseja recusar a mentoria com ${mentee ? mentee.name : 'este usuário'}?`,
+                () => {
+                    appointment.status = 'recusado';
+                    saveAppointments();
+                    renderMentorDashboard();
+                    showToast('Agendamento recusado.', 'info');
+                }
+            );
+        }
+    }
+
+    function renderMentorDashboard(): void {
+        if (!currentUser || currentUser.role !== 'mentor') return;
+    
+        const myAppointments = appointments.filter(app => app.mentorId === currentUser!.id);
+    
+        const completedCount = myAppointments.filter(app => app.status === 'realizado' || app.status === 'avaliado').length;
+        const mentees = new Set(myAppointments.map(app => app.menteeId));
+        const menteeCount = mentees.size;
+    
+        const upcomingAppointments = myAppointments
+            .filter(app => new Date(`${app.date}T${app.time}`) >= new Date() && (app.status === 'pendente' || app.status === 'aceito'))
+            .sort((a: Appointment, b: Appointment) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+        
+        const nextAppointment = upcomingAppointments[0];
+    
+        (document.getElementById('mentor-stats-total') as HTMLElement).textContent = completedCount.toString();
+        (document.getElementById('mentor-stats-mentees') as HTMLElement).textContent = menteeCount.toString();
+        if (nextAppointment) {
+            const mentee = users.find(u => u.id === nextAppointment.menteeId);
+            (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 
+             `${new Date(nextAppointment.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} com ${mentee ? mentee.name : 'Desconhecido'}`;
+        } else {
+            (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 'Nenhum';
+        }
+    
+        const upcomingList = document.getElementById('upcoming-appointments-list') as HTMLElement;
+        upcomingList.innerHTML = '';
+        if (upcomingAppointments.length > 0) {
+            upcomingAppointments.forEach(app => {
+                const mentee = users.find(u => u.id === app.menteeId);
+                
+                let actionButtons = '';
+                if (app.status === 'pendente') {
+                    actionButtons = `
+                        <button class="btn btn-success btn-sm me-2 btn-accept-appointment" data-id="${app.id}">Aceitar</button>
+                        <button class="btn btn-danger btn-sm btn-decline-appointment" data-id="${app.id}">Recusar</button>
+                    `;
+                }
+
+                const statusBadge = app.status === 'pendente' 
+                    ? `<span class="badge bg-warning text-dark">${app.status}</span>`
+                    : `<span class="badge bg-success">${app.status}</span>`;
+
+                upcomingList.innerHTML += `
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h5>
+                            <small>${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                        </div>
+                        <p class="mb-1"><strong>Tópico:</strong> ${app.topic}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small>Status: ${statusBadge}</small>
+                            <div>
+                                ${actionButtons}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            upcomingList.innerHTML = '<p class="text-center text-muted p-3">Nenhum próximo encontro agendado.</p>';
+        }
+    
+        const pastAppointmentsList = document.getElementById('past-appointments-list') as HTMLElement;
+        const pastAppointments = myAppointments
+         .filter(app => new Date(`${app.date}T${app.time}`) < new Date() || ['recusado', 'realizado', 'avaliado'].includes(app.status))
+         .sort((a: Appointment, b: Appointment) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
+        
+        pastAppointmentsList.innerHTML = '';
+        if (pastAppointments.length > 0) {
+            pastAppointments.forEach(app => {
+                const mentee = users.find(u => u.id === app.menteeId);
+                pastAppointmentsList.innerHTML += `
+                    <div class="list-group-item">
+                         <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h5>
+                            <small>${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
+                        </div>
+                        <p class="mb-1"><strong>Tópico:</strong> ${app.topic}</p>
+                        <small>Status: <span class="badge bg-secondary">${app.status}</span></small>
+                    </div>
+                `;
+            });
+        } else {
+            pastAppointmentsList.innerHTML = '<p class="text-center text-muted p-3">Nenhum encontro no histórico.</p>';
         }
     }
 
@@ -742,11 +848,17 @@ document.addEventListener('DOMContentLoaded', function () {
         views.forEach(view => view.classList.toggle('d-none', view.id !== targetViewId));
         
         if (targetViewId === 'agendamento-section') {
-        console.log('1. Entrou no switchView para agendamento. Role:', currentUser.role);
-        calendarContainer.classList.remove("d-none"); 
-        mentorAppointmentView.style.display = currentUser.role === 'mentor' ? 'block' : 'none';
-        calendarContainer.style.display = currentUser.role === 'mentee' ? 'block' : 'none';
-        renderAppointments();
+            if (currentUser.role === 'mentee') {
+                mentorAppointmentView.classList.add('d-none');
+                calendarContainer.classList.remove('d-none');
+                setTimeout(() => {
+                    renderAppointments();
+                }, 0);
+            } else if (currentUser.role === 'mentor') {
+                mentorAppointmentView.classList.remove('d-none');
+                calendarContainer.classList.add('d-none');
+                renderMentorDashboard();
+            }
         } else if (targetViewId === 'admin-panel') {
             renderAdminDashboard();
         } else if (targetViewId === 'mensagem-section') {
@@ -770,6 +882,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- Inicialização e Event Listeners ---
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handlePublicRegister);
     showRegisterBtn.addEventListener('click', showRegisterFormView);
@@ -829,6 +942,27 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('mentors-list-container')!.addEventListener('click', handleViewProfileClick);
     document.getElementById('recommended-mentors-container')!.addEventListener('click', handleViewProfileClick);
     document.getElementById('featured-mentors-container')!.addEventListener('click', handleViewProfileClick);
+
+    const upcomingAppointmentsList = document.getElementById('upcoming-appointments-list');
+    if (upcomingAppointmentsList) {
+        upcomingAppointmentsList.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            
+            const acceptBtn = target.closest('.btn-accept-appointment');
+            if (acceptBtn) {
+                const appId = parseInt(acceptBtn.getAttribute('data-id')!, 10);
+                handleAcceptAppointment(appId);
+                return;
+            }
+    
+            const declineBtn = target.closest('.btn-decline-appointment');
+            if (declineBtn) {
+                const appId = parseInt(declineBtn.getAttribute('data-id')!, 10);
+                handleDeclineAppointment(appId);
+                return;
+            }
+        });
+    }
 
     sendMessageFromProfileBtn.addEventListener('click', (e) => {
         const mentorId = parseInt((e.currentTarget as HTMLElement).dataset.mentorId!);
