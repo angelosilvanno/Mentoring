@@ -303,6 +303,14 @@ a:hover {
   border: 0; 
 }
 
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
 #mobile-header {
     display: flex;
     align-items: center;
@@ -347,6 +355,66 @@ a:hover {
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1045;
+}
+
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card .stat-icon {
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.stat-card h4 {
+    font-weight: 700;
+    margin-bottom: 0.1rem;
+}
+
+.stat-card p {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+#appointments-tabs .nav-link {
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    border-color: transparent;
+    border-bottom: 3px solid transparent;
+}
+
+#appointments-tabs .nav-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background-color: transparent;
+}
+
+#upcoming-appointments-list .list-group-item,
+#past-appointments-list .list-group-item {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+#upcoming-appointments-list .list-group-item:hover,
+#past-appointments-list .list-group-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+#upcoming-appointments-list, #past-appointments-list {
+    border: none;
 }
 
 @media (min-width: 992px) {

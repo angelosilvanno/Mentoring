@@ -122,6 +122,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const createTopicForm = document.getElementById('form-create-topic') as HTMLFormElement;
     const viewTopicModal = new bootstrap.Modal(document.getElementById('viewTopicModal') as HTMLElement);
     const replyTopicForm = document.getElementById('form-reply-topic') as HTMLFormElement;
+    const editAppointmentModal = new bootstrap.Modal(document.getElementById('editAppointmentModal') as HTMLElement);
+    const editAppointmentForm = document.getElementById('form-edit-appointment') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
@@ -141,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let calendar: Calendar | null = null;
     let currentOpenTopicId: number | null = null;
     let userToResetPasswordId: number | null = null;
+    let appointmentToEditId: number | null = null;
 
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
@@ -973,6 +976,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function openEditAppointmentModal(appId: number): void {
+        const appointment = appointments.find(app => app.id === appId);
+        if (!appointment) return;
+    
+        appointmentToEditId = appId;
+        (document.getElementById('edit-appointment-date') as HTMLInputElement).value = appointment.date;
+        (document.getElementById('edit-appointment-time') as HTMLInputElement).value = appointment.time;
+        (document.getElementById('edit-appointment-topic') as HTMLTextAreaElement).value = appointment.topic;
+        editAppointmentModal.show();
+    }
+    
+    function handleEditAppointment(e: SubmitEvent): void {
+        e.preventDefault();
+        if (appointmentToEditId === null) return;
+    
+        const appointment = appointments.find(app => app.id === appointmentToEditId);
+        if (!appointment) return;
+    
+        appointment.date = (document.getElementById('edit-appointment-date') as HTMLInputElement).value;
+        appointment.time = (document.getElementById('edit-appointment-time') as HTMLInputElement).value;
+        appointment.topic = (document.getElementById('edit-appointment-topic') as HTMLTextAreaElement).value;
+    
+        saveAppointments();
+        renderMentorDashboard();
+        editAppointmentModal.hide();
+        showToast('Agendamento atualizado com sucesso!', 'success');
+        appointmentToEditId = null;
+    }
+
     function renderMentorDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentor') return;
     
@@ -1010,6 +1042,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button class="btn btn-success btn-sm me-2 btn-accept-appointment" data-id="${app.id}">Aceitar</button>
                         <button class="btn btn-danger btn-sm btn-decline-appointment" data-id="${app.id}">Recusar</button>
                     `;
+                } else if (app.status === 'aceito') {
+                    actionButtons = `
+                        <button class="btn btn-outline-secondary btn-sm btn-edit-appointment" data-id="${app.id}">Editar</button>
+                    `;
                 }
 
                 const statusBadge = app.status === 'pendente' 
@@ -1017,20 +1053,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     : `<span class="badge bg-success">${app.status}</span>`;
 
                 upcomingList.innerHTML += `
-                    <div class="list-group-item d-flex align-items-center gap-3">
-                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="45" height="45" alt="Avatar">
+                    <div class="list-group-item d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="50" height="50" alt="Avatar">
                         <div class="flex-grow-1">
                             <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
-                            <small class="d-block text-muted">Tópico: ${app.topic}</small>
+                            <small class="d-block text-muted"><strong>Tópico:</strong> ${app.topic}</small>
                         </div>
-                        <div class="text-end">
-                            <small class="text-muted d-block">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
-                            <div class="mt-1">
-                                ${statusBadge}
-                            </div>
-                            <div class="mt-2">
-                                ${actionButtons}
-                            </div>
+                        <div class="text-sm-end mt-2 mt-sm-0">
+                            <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} às ${app.time}</div>
+                            <div>${statusBadge}</div>
+                            ${actionButtons}
                         </div>
                     </div>
                 `;
@@ -1050,15 +1082,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 const mentee = users.find(u => u.id === app.menteeId);
                 pastAppointmentsList.innerHTML += `
                     <div class="list-group-item d-flex align-items-center gap-3">
-                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="45" height="45" alt="Avatar">
+                        <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="50" height="50" alt="Avatar">
                         <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
-                                <small class="text-muted">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</small>
-                            </div>
+                            <h6 class="mb-0">Mentoria com ${mentee ? mentee.name : 'Desconhecido'}</h6>
                             <small class="d-block text-muted">Tópico: ${app.topic}</small>
                         </div>
-                        <span class="badge bg-secondary">${app.status}</span>
+                        <div class="text-sm-end">
+                            <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
+                            <span class="badge rounded-pill bg-secondary">${app.status}</span>
+                        </div>
                     </div>
                 `;
             });
@@ -1205,6 +1237,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     editProfileForm.addEventListener('submit', handleProfileUpdate);
+    editAppointmentForm.addEventListener('submit', handleEditAppointment);
 
     addUserBtn.addEventListener('click', () => addUserModal.show());
     addUserForm.addEventListener('submit', handleAdminAddUser);
@@ -1262,6 +1295,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (declineBtn) {
                 const appId = parseInt(declineBtn.getAttribute('data-id')!, 10);
                 handleDeclineAppointment(appId);
+                return;
+            }
+
+            const editBtn = target.closest('.btn-edit-appointment');
+            if (editBtn) {
+                const appId = parseInt(editBtn.getAttribute('data-id')!, 10);
+                openEditAppointmentModal(appId);
                 return;
             }
         });
