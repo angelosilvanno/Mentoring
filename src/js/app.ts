@@ -923,7 +923,7 @@ document.addEventListener('DOMContentLoaded', function () {
         (document.getElementById('mentor-stats-total') as HTMLElement).textContent = completedCount.toString();
         (document.getElementById('mentor-stats-mentees') as HTMLElement).textContent = menteeCount.toString();
         if (nextAppointment) {
-            const mentee = users.find(u => u.id === nextAppointment.menteeId);
+            const mentee = users.find(u => u.id === nextAppointment.mentorId);
             (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 
              `${new Date(nextAppointment.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} com ${mentee ? mentee.name : 'Desconhecido'}`;
         } else {
@@ -1007,9 +1007,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const suggestedMentorsContainer = document.getElementById('dashboard-suggested-mentors') as HTMLElement;
     
         const myAppointments = appointments.filter(app => app.menteeId === currentUser!.id);
-       const nextAppointment = myAppointments
-         .filter(app => app.status === 'aceito' && new Date(`${app.date}T${app.time}`) >= new Date())
-        .sort((a: Appointment, b: Appointment) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())[0];
+        const nextAppointment = myAppointments
+            .filter(app => app.status === 'aceito' && new Date(`${app.date}T${app.time}`) >= new Date())
+            .sort((a: Appointment, b: Appointment) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())[0];
     
         if (nextAppointment) {
             const mentor = users.find(u => u.id === nextAppointment.mentorId);
