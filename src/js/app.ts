@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const appConfirmModal = new bootstrap.Modal(confirmModalElement);
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
     const appInfoModal = new bootstrap.Modal(infoModalElement);
-
+    
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
         editProfileModal.hide();
         updateDashboardUI(currentUser);
     }
-
+    
     function showMentorProfile(mentorId: number): void {
         const mentor = users.find(user => user.id === mentorId);
         if (!mentor || !currentUser) return;
@@ -766,13 +766,13 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('Por favor, selecione uma avaliação de 1 a 5 estrelas.', 'warning');
             return;
         }
-        const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
-        if (appointmentIndex === -1) {
+        const appointment = appointments.find(a => a.id === appointmentId);
+        if (!appointment) {
             showToast('Agendamento não encontrado.', 'danger');
             return;
         }
-        appointments[appointmentIndex].status = 'avaliado';
-        appointments[appointmentIndex].feedback = { rating, comment, date: new Date().toISOString() };
+        appointment.status = 'avaliado';
+        appointment.feedback = { rating, comment, date: new Date().toISOString() };
         saveAppointments();
         showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
         feedbackModal.hide();
@@ -943,8 +943,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderAppointments(): void {
         if (!currentUser) return;
         if (currentUser.role === 'mentee') {
-            renderMenteeAppointments();
-            // initCalendar(); // Pode ser chamado dentro de renderMenteeAppointments se necessário
+            initCalendar();
         } else if (currentUser.role === 'mentor') {
             renderMentorDashboard();
         }
@@ -972,23 +971,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     saveAppointments();
                     renderMentorDashboard();
                     showToast('Agendamento recusado.', 'info');
-                }
-            );
-        }
-    }
-
-    function handleCancelAppointment(appId: number): void {
-        const appointment = appointments.find(app => app.id === appId);
-        if (appointment) {
-            const mentee = users.find(u => u.id === appointment.menteeId);
-            showConfirm(
-                'Cancelar Agendamento',
-                `Tem certeza que deseja cancelar a mentoria com ${mentee ? mentee.name : 'este usuário'}?`,
-                () => {
-                    appointment.status = 'recusado';
-                    saveAppointments();
-                    renderMentorDashboard();
-                    showToast('Agendamento cancelado.', 'info');
                 }
             );
         }
@@ -1025,18 +1007,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderMentorDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentor') return;
-
-        let appointmentsChanged = false;
-        appointments.forEach(app => {
-            if (app.status === 'aceito' && new Date(`${app.date}T${app.time}`) < new Date()) {
-                app.status = 'realizado';
-                appointmentsChanged = true;
-            }
-        });
-
-        if (appointmentsChanged) {
-            saveAppointments();
-        }
     
         const myAppointments = appointments.filter(app => app.mentorId === currentUser!.id);
     
@@ -1053,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function () {
         (document.getElementById('mentor-stats-total') as HTMLElement).textContent = completedCount.toString();
         (document.getElementById('mentor-stats-mentees') as HTMLElement).textContent = menteeCount.toString();
         if (nextAppointment) {
-            const mentee = users.find(u => u.id === nextAppointment.menteeId);
+            const mentee = users.find(u => u.id === nextAppointment.mentorId);
             (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 
              `${new Date(nextAppointment.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} com ${mentee ? mentee.name : 'Desconhecido'}`;
         } else {
@@ -1076,9 +1046,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     `;
                 } else if (app.status === 'aceito') {
                     actionButtons = `
-                        <div class="btn-group" role="group">
-                           <button class="btn btn-outline-primary btn-sm btn-edit-appointment" data-id="${app.id}">Editar</button>
-                           <button class="btn btn-outline-danger btn-sm btn-cancel-appointment" data-id="${app.id}">Cancelar</button>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill bg-success">aceito</span>
+                            <button class="btn btn-outline-secondary btn-sm py-0 px-1 btn-edit-appointment" data-id="${app.id}" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
                         </div>
                     `;
                 }
@@ -1128,71 +1100,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } else {
             pastAppointmentsList.innerHTML = '<p class="text-center text-muted p-3">Nenhum encontro no histórico.</p>';
-        }
-    }
-
-    function renderMenteeAppointments(): void {
-        if (!currentUser) return;
-    
-        const myAppointments = appointments.filter(app => app.menteeId === currentUser!.id);
-    
-        const upcomingList = document.getElementById('upcoming-appointments-list') as HTMLElement;
-        upcomingList.innerHTML = '';
-        const upcomingAppointments = myAppointments
-            .filter(app => new Date(`${app.date}T${app.time}`) >= new Date() && ['pendente', 'aceito'].includes(app.status))
-            .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
-    
-        if (upcomingAppointments.length > 0) {
-            upcomingAppointments.forEach(app => {
-                const mentor = users.find(u => u.id === app.mentorId);
-                upcomingList.innerHTML += `
-                    <div class="list-group-item d-flex align-items-center gap-3">
-                        <img src="${getAvatarUrl(mentor)}" class="rounded-circle" width="50" height="50">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Mentoria com ${mentor ? mentor.name : 'Desconhecido'}</h6>
-                            <small class="d-block text-muted">Tópico: ${app.topic}</small>
-                        </div>
-                        <div class="text-sm-end">
-                            <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} às ${app.time}</div>
-                            <span class="badge rounded-pill bg-secondary">${app.status}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        } else {
-            upcomingList.innerHTML = '<p class="text-center text-muted p-3">Nenhum encontro futuro agendado.</p>';
-        }
-    
-        const pastList = document.getElementById('past-appointments-list') as HTMLElement;
-        pastList.innerHTML = '';
-        const pastAppointments = myAppointments
-            .filter(app => new Date(`${app.date}T${app.time}`) < new Date() || ['recusado', 'realizado', 'avaliado'].includes(app.status))
-            .sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
-    
-        if (pastAppointments.length > 0) {
-            pastAppointments.forEach(app => {
-                const mentor = users.find(u => u.id === app.mentorId);
-                let actionHtml = `<span class="badge rounded-pill bg-secondary">${app.status}</span>`;
-                if (app.status === 'realizado') {
-                    actionHtml = `<button class="btn btn-sm btn-warning btn-open-feedback" data-id="${app.id}">Avaliar Encontro</button>`;
-                }
-    
-                pastList.innerHTML += `
-                    <div class="list-group-item d-flex align-items-center gap-3">
-                        <img src="${getAvatarUrl(mentor)}" class="rounded-circle" width="50" height="50">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Mentoria com ${mentor ? mentor.name : 'Desconhecido'}</h6>
-                            <small class="d-block text-muted">Tópico: ${app.topic}</small>
-                        </div>
-                        <div class="text-sm-end">
-                            <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
-                            ${actionHtml}
-                        </div>
-                    </div>
-                `;
-            });
-        } else {
-            pastList.innerHTML = '<p class="text-center text-muted p-3">Nenhum encontro no histórico.</p>';
         }
     }
 
@@ -1265,22 +1172,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (currentUser.role === 'mentee') {
                 mentorAppointmentView.classList.add('d-none');
                 calendarContainer.classList.remove('d-none');
-                
-                const agendamentoCardBody = document.getElementById('agendamento-card-body');
-                if (agendamentoCardBody && !agendamentoCardBody.querySelector('#appointments-tabs')) {
-                    agendamentoCardBody.innerHTML = `
-                        <ul class="nav nav-tabs nav-fill mb-3" id="appointments-tabs" role="tablist">
-                          <li class="nav-item" role="presentation"><button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-tab-pane" type="button" role="tab">Próximos Encontros</button></li>
-                          <li class="nav-item" role="presentation"><button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-tab-pane" type="button" role="tab">Histórico</button></li>
-                        </ul>
-                        <div class="tab-content" id="appointments-tabs-content">
-                          <div class="tab-pane fade show active" id="upcoming-tab-pane" role="tabpanel"><div id="upcoming-appointments-list"></div></div>
-                          <div class="tab-pane fade" id="past-tab-pane" role="tabpanel"><div id="past-appointments-list"></div></div>
-                        </div>
-                    `;
-                }
-                renderMenteeAppointments();
-
+                setTimeout(() => {
+                    renderAppointments();
+                }, 0);
             } else if (currentUser.role === 'mentor') {
                 mentorAppointmentView.classList.remove('d-none');
                 calendarContainer.classList.add('d-none');
@@ -1315,6 +1209,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- Inicialização e Event Listeners ---
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handlePublicRegister);
     showRegisterBtn.addEventListener('click', showRegisterFormView);
@@ -1388,45 +1283,29 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('recommended-mentors-container')!.addEventListener('click', handleViewProfileClick);
     document.getElementById('featured-mentors-container')!.addEventListener('click', handleViewProfileClick);
 
-    const appointmentsContainer = document.getElementById('agendamento-section');
-    if (appointmentsContainer) {
-        appointmentsContainer.addEventListener('click', (e) => {
+    const upcomingAppointmentsList = document.getElementById('upcoming-appointments-list');
+    if (upcomingAppointmentsList) {
+        upcomingAppointmentsList.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
-
+            
             const acceptBtn = target.closest('.btn-accept-appointment');
             if (acceptBtn) {
-                handleAcceptAppointment(parseInt(acceptBtn.getAttribute('data-id')!, 10));
+                const appId = parseInt(acceptBtn.getAttribute('data-id')!, 10);
+                handleAcceptAppointment(appId);
                 return;
             }
     
             const declineBtn = target.closest('.btn-decline-appointment');
             if (declineBtn) {
-                handleDeclineAppointment(parseInt(declineBtn.getAttribute('data-id')!, 10));
+                const appId = parseInt(declineBtn.getAttribute('data-id')!, 10);
+                handleDeclineAppointment(appId);
                 return;
             }
 
             const editBtn = target.closest('.btn-edit-appointment');
             if (editBtn) {
-                openEditAppointmentModal(parseInt(editBtn.getAttribute('data-id')!, 10));
-                return;
-            }
-
-            const cancelBtn = target.closest('.btn-cancel-appointment');
-            if(cancelBtn) {
-                handleCancelAppointment(parseInt(cancelBtn.getAttribute('data-id')!, 10));
-                return;
-            }
-
-            const feedbackBtn = target.closest('.btn-open-feedback');
-            if (feedbackBtn) {
-                const appId = parseInt(feedbackBtn.getAttribute('data-id')!, 10);
-                const appointment = appointments.find(a => a.id === appId);
-                if (appointment) {
-                    const mentor = users.find(u => u.id === appointment.mentorId);
-                    (document.getElementById('feedback-appointment-id') as HTMLInputElement).value = appId.toString();
-                    (document.getElementById('feedback-mentor-name') as HTMLElement).textContent = mentor ? mentor.name : 'Mentor';
-                    feedbackModal.show();
-                }
+                const appId = parseInt(editBtn.getAttribute('data-id')!, 10);
+                openEditAppointmentModal(appId);
                 return;
             }
         });
