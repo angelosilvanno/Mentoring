@@ -50,12 +50,12 @@ Siga os passos abaixo para ter um ambiente de desenvolvimento em execução.
 
 1.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/seu-usuario/seu-repositorio.git
+    git clone https://github.com/angelosilvanno/Mentoring.git
     ```
 
 2.  **Navegue até o diretório do projeto:**
     ```bash
-    cd seu-repositorio
+    cd Mentoring
     ```
 
 3.  **Instale as dependências do projeto:**
