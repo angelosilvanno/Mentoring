@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const appConfirmModal = new bootstrap.Modal(confirmModalElement);
     const infoModalElement = document.getElementById('infoModal') as HTMLElement;
     const appInfoModal = new bootstrap.Modal(infoModalElement);
-    
+
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
@@ -144,6 +144,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentOpenTopicId: number | null = null;
     let userToResetPasswordId: number | null = null;
     let appointmentToEditId: number | null = null;
+
+    // A. Adicione uma nova variável de estado
+    // Perto do topo do seu arquivo, onde você declara as outras variáveis (currentUser, currentOpenTopicId, etc.), adicione uma para rastrear com quem a conversa está aberta:
+    let currentOpenConversationPartnerId: number | null = null;
 
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
@@ -231,22 +235,22 @@ document.addEventListener('DOMContentLoaded', function () {
         editProfileModal.hide();
         updateDashboardUI(currentUser);
     }
-    
+
     function showMentorProfile(mentorId: number): void {
         const mentor = users.find(user => user.id === mentorId);
         if (!mentor || !currentUser) return;
-        
+
         const allRatings = appointments.filter(a => a.mentorId === mentorId && a.feedback && a.feedback.rating).map(a => a.feedback!.rating);
         const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : "0";
-        
+
         (document.getElementById('modal-profile-avatar') as HTMLImageElement).src = getAvatarUrl(mentor);
         (document.getElementById('modal-profile-name') as HTMLElement).textContent = mentor.name;
         (document.getElementById('modal-profile-course') as HTMLElement).textContent = mentor.course;
         (document.getElementById('modal-profile-bio') as HTMLElement).textContent = mentor.bio || 'Este mentor ainda não adicionou uma biografia.';
-        
+
         const ratingContainer = document.getElementById('modal-profile-rating') as HTMLElement;
         ratingContainer.innerHTML = parseFloat(averageRating) > 0 ? `<i class="bi bi-star-fill text-warning"></i> ${averageRating} (${allRatings.length} avaliações)` : '<span class="text-muted">Ainda não avaliado</span>';
-        
+
         const skillsContainer = document.getElementById('modal-profile-skills') as HTMLElement;
         skillsContainer.innerHTML = '';
         if (mentor.skills && mentor.skills.length > 0) {
@@ -285,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateDashboardUI(user: User): void {
         sidebarUsername.textContent = user.name;
         sidebarAvatar.src = getAvatarUrl(user);
-        
+
         Object.values(navItems).forEach(item => item?.classList.add('d-none'));
 
         if (user.role === 'mentee') {
@@ -305,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
             switchView('admin-panel');
         }
     }
-    
+
     function handleLogin(e: SubmitEvent): void {
         e.preventDefault();
         const target = e.target as HTMLFormElement;
@@ -313,11 +317,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const loginIdentifier = (target.querySelector('input[name="loginIdentifier"]') as HTMLInputElement).value;
         const password = (target.querySelector('input[type="password"]') as HTMLInputElement).value;
 
-        const foundUser = users.find(user => 
-          (user.email === loginIdentifier || user.username === loginIdentifier) && 
+        const foundUser = users.find(user =>
+          (user.email === loginIdentifier || user.username === loginIdentifier) &&
            user.password === password
         );
-    
+
         if (foundUser) {
           setCurrentUser(foundUser);
           window.location.reload();
@@ -343,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('Este e-mail já está em uso.', 'danger');
             return;
         }
-        
+
         const newUser: User = {
             id: Date.now(),
             username: String(userData.username),
@@ -363,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showLoginFormView();
         registerForm.reset();
     }
-    
+
     function handleAdminAddUser(e: SubmitEvent) {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
@@ -372,26 +376,26 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!userData.fullName || !userData.username || !userData.email || !userData.password || !userData.course || !userData.role || !userData.gender) {
             showToast("Por favor, preencha todos os campos.", "warning"); return;
         }
-        
+
         if (users.some(user => user.username === userData.username)) {
             showToast('Este nome de usuário já está em uso.', 'danger'); return;
         }
         if (users.some(user => user.email === userData.email)) {
             showToast('Este e-mail já está em uso.', 'danger'); return;
         }
-        
-        const newUser: User = { 
-            id: Date.now(), 
-            username: String(userData.username), 
+
+        const newUser: User = {
+            id: Date.now(),
+            username: String(userData.username),
             name: String(userData.fullName),
-            email: String(userData.email), 
-            password: String(userData.password), 
-            course: String(userData.course), 
-            role: userData.role as 'mentee' | 'mentor', 
-            gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
-            skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
-            bio: '', 
-            availability: '' 
+            email: String(userData.email),
+            password: String(userData.password),
+            course: String(userData.course),
+            role: userData.role as 'mentee' | 'mentor',
+            gender: userData.gender as 'masculino' | 'feminino' | 'outro',
+            skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [],
+            bio: '',
+            availability: ''
         };
         users.push(newUser);
         saveUsers();
@@ -466,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
             container.innerHTML = `<div class="col-12 text-center p-5 text-muted"><i class="bi bi-star fs-1"></i><h5 class="mt-3">Ainda não há mentores em destaque</h5><p>Os mentores mais bem avaliados pela comunidade aparecerão aqui assim que receberem feedback.</p></div>`;
         }
     }
-    
+
     function renderMentorList(filter: string = ''): void {
         const lowercasedFilter = filter.trim().toLowerCase();
         if (!lowercasedFilter) {
@@ -516,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderPopularTags();
         renderMentorList();
     }
-    
+
     function renderAdminDashboard(): void {
         const manageableUsers = users.filter(u => u.role !== 'admin');
         const adminUsers = users.filter(u => u.role === 'admin');
@@ -559,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         );
     }
-    
+
     function showLoginFormView(): void {
         registerSection.classList.add('d-none');
         forgotPasswordSection.classList.add('d-none');
@@ -592,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         const email = (forgotPasswordForm.querySelector('input[name="email"]') as HTMLInputElement).value;
         const user = users.find(u => u.email === email);
-    
+
         if (user) {
             userToResetPasswordId = user.id;
             showToast('Usuário encontrado! Por favor, defina uma nova senha.', 'success');
@@ -607,20 +611,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function handlePasswordReset(e: SubmitEvent) {
         e.preventDefault();
         if (userToResetPasswordId === null) return;
-    
+
         const newPassword = (resetPasswordForm.querySelector('input[name="newPassword"]') as HTMLInputElement).value;
         const confirmPassword = (resetPasswordForm.querySelector('input[name="confirmPassword"]') as HTMLInputElement).value;
-    
+
         if (newPassword.length < 6) {
             showToast('A nova senha deve ter no mínimo 6 caracteres.', 'warning');
             return;
         }
-    
+
         if (newPassword !== confirmPassword) {
             showToast('As senhas não coincidem.', 'danger');
             return;
         }
-    
+
         const userIndex = users.findIndex(u => u.id === userToResetPasswordId);
         if (userIndex !== -1) {
             users[userIndex].password = newPassword;
@@ -647,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast('Solicitação de agendamento enviada!', 'success');
         requestMentorshipModal.hide();
     }
-    
+
     function renderConversations() {
         if (!currentUser) return;
         conversationsListUl.innerHTML = '';
@@ -667,11 +671,61 @@ document.addEventListener('DOMContentLoaded', function () {
         sortedPartners.forEach(([partnerId]) => {
             const partner = users.find(u => u.id === partnerId);
             const lastMessage = messages.filter(m => (m.senderId === partnerId && m.receiverId === currentUser!.id) || (m.senderId === currentUser!.id && m.receiverId === partnerId)).sort((a: Message, b: Message) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-            
+
             if (partner && lastMessage) {
                 conversationsListUl.innerHTML += `<li class="list-group-item list-group-item-action" style="cursor: pointer;" data-conversation-with="${partner.id}"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1">${partner.name}</h5><small>${new Date(lastMessage.timestamp).toLocaleDateString()}</small></div><p class="mb-1 text-truncate"><strong>${lastMessage.subject || '(Sem assunto)'}:</strong> ${lastMessage.body}</p></li>`;
             }
         });
+    }
+
+    // B. Crie a função para renderizar a conversa
+    // Esta nova função será responsável por pegar o ID do parceiro de conversa, filtrar todas as mensagens trocadas e exibi-las no modal.
+    function renderConversationThread(partnerId: number): void {
+        if (!currentUser) return;
+        const partner = users.find(u => u.id === partnerId);
+        if (!partner) {
+            showToast('Usuário da conversa não encontrado.', 'danger');
+            return;
+        }
+
+        currentOpenConversationPartnerId = partnerId;
+
+        const modal = new bootstrap.Modal(document.getElementById('viewConversationModal') as HTMLElement);
+        const modalTitle = document.getElementById('viewConversationModalLabel') as HTMLElement;
+        const modalBody = document.getElementById('conversation-thread-body') as HTMLElement;
+
+        modalTitle.textContent = `Conversa com ${partner.name}`;
+        modalBody.innerHTML = '';
+
+        const conversationMessages = messages
+            .filter(m =>
+                (m.senderId === currentUser!.id && m.receiverId === partnerId) ||
+                (m.senderId === partnerId && m.receiverId === currentUser!.id)
+            )
+            .sort((a: Message, b: Message) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        if (conversationMessages.length === 0) {
+            modalBody.innerHTML = '<p class="text-center text-muted">Nenhuma mensagem nesta conversa ainda.</p>';
+        } else {
+            conversationMessages.forEach(msg => {
+                const isSent = msg.senderId === currentUser!.id;
+                const bubbleClass = isSent ? 'message-sent' : 'message-received';
+
+                const messageHtml = `
+                    <div class="conversation-bubble ${bubbleClass}">
+                        <p class="mb-1"><strong>${msg.subject || '(Sem assunto)'}</strong></p>
+                        <p class="mb-0 small">${msg.body}</p>
+                        <small class="d-block text-end mt-2 opacity-75">${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                    </div>
+                `;
+                modalBody.innerHTML += messageHtml;
+            });
+        }
+
+        modal.show();
+        setTimeout(() => {
+            modalBody.scrollTop = modalBody.scrollHeight;
+        }, 100);
     }
 
     function handleSendMessage(e: SubmitEvent) {
@@ -689,47 +743,81 @@ document.addEventListener('DOMContentLoaded', function () {
         renderConversations();
         switchView('mensagem-section');
     }
-    
+
+    // C. Crie a função para lidar com o envio de respostas
+    // Esta função será acionada quando o usuário digitar e enviar uma resposta de dentro do modal.
+    function handleReplyToMessage(e: SubmitEvent): void {
+        e.preventDefault();
+        if (!currentUser || currentOpenConversationPartnerId === null) return;
+
+        const replyForm = e.target as HTMLFormElement;
+        const replyBodyInput = document.getElementById('reply-message-body') as HTMLTextAreaElement;
+        const body = replyBodyInput.value.trim();
+
+        if (!body) return;
+
+        const lastMessage = messages
+            .filter(m =>
+                (m.senderId === currentUser!.id && m.receiverId === currentOpenConversationPartnerId) ||
+                (m.senderId === currentOpenConversationPartnerId && m.receiverId === currentUser!.id)
+            )
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+        messages.push({
+            id: Date.now(),
+            senderId: currentUser.id,
+            receiverId: currentOpenConversationPartnerId,
+            subject: lastMessage ? lastMessage.subject : 'Re:',
+            body: body,
+            timestamp: new Date().toISOString()
+        });
+
+        saveMessages();
+        replyForm.reset();
+        renderConversationThread(currentOpenConversationPartnerId);
+        renderConversations();
+    }
+
     function processPostContent(content: string): string {
         const youtubeVideoRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
         const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/;
-    
+
         const playlistMatch = content.match(youtubePlaylistRegex);
         if (playlistMatch && playlistMatch[1]) {
             const playlistId = playlistMatch[1];
             return `
                 <div class="youtube-embed-container my-3">
-                    <iframe 
-                        width="100%" 
-                        height="315" 
-                        src="https://www.youtube.com/embed/videoseries?list=${playlistId}" 
-                        title="YouTube video player" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    <iframe
+                        width="100%"
+                        height="315"
+                        src="https://www.youtube.com/embed/videoseries?list=${playlistId}"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>
                 </div>
             `;
         }
-    
+
         const videoMatch = content.match(youtubeVideoRegex);
         if (videoMatch && videoMatch[1]) {
             const videoId = videoMatch[1];
             return `
                 <div class="youtube-embed-container my-3">
-                    <iframe 
-                        width="100%" 
-                        height="315" 
-                        src="https://www.youtube.com/embed/${videoId}" 
-                        title="YouTube video player" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    <iframe
+                        width="100%"
+                        height="315"
+                        src="https://www.youtube.com/embed/${videoId}"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>
                 </div>
             `;
         }
-    
+
         return content;
     }
 
@@ -740,18 +828,18 @@ document.addEventListener('DOMContentLoaded', function () {
             container.innerHTML = '<p class="text-muted">Ainda não há tópicos no fórum. Seja o primeiro a criar um!</p>';
             return;
         }
-        
+
         forumTopics.sort((a: ForumTopic, b: ForumTopic) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).forEach(topic => {
             const author = users.find(u => u.id === topic.authorId);
             const processedBody = processPostContent(topic.body);
-    
+
             container.innerHTML += `
                 <a href="#" class="list-group-item list-group-item-action" data-topic-id="${topic.id}">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">${topic.title}</h5>
                         <small>${new Date(topic.createdAt).toLocaleDateString()}</small>
                     </div>
-                    <div class="forum-post-body mt-2">${processedBody}</div> 
+                    <div class="forum-post-body mt-2">${processedBody}</div>
                     <small class="d-block mt-2">Por ${author ? author.name : 'Usuário Removido'} • ${topic.replies.length} respostas</small>
                 </a>`;
         });
@@ -778,7 +866,7 @@ document.addEventListener('DOMContentLoaded', function () {
         feedbackModal.hide();
         renderAppointments();
     }
-    
+
     function handleCreateTopic(e: SubmitEvent) {
         e.preventDefault();
         if (!currentUser) return;
@@ -799,15 +887,15 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('Tópico não encontrado.', 'danger');
             return;
         }
-    
+
         currentOpenTopicId = topicId;
-    
+
         const modalTitle = document.getElementById('view-topic-title') as HTMLElement;
         modalTitle.textContent = topic.title;
-    
+
         const repliesContainer = document.getElementById('topic-replies-container') as HTMLElement;
         repliesContainer.innerHTML = '';
-    
+
         const originalPostAuthor = users.find(u => u.id === topic.authorId);
         const processedBody = processPostContent(topic.body);
         const originalPostHtml = `
@@ -826,7 +914,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <h5 class="mb-3">Respostas (${topic.replies.length})</h5>
         `;
         repliesContainer.innerHTML += originalPostHtml;
-    
+
         if (topic.replies.length > 0) {
             topic.replies.forEach(reply => {
                 const replyAuthor = users.find(u => u.id === reply.authorId);
@@ -849,22 +937,22 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             repliesContainer.innerHTML += '<p class="text-center text-muted">Nenhuma resposta ainda. Seja o primeiro a comentar!</p>';
         }
-    
+
         viewTopicModal.show();
     }
 
     function handleReplyToTopic(e: SubmitEvent): void {
         e.preventDefault();
         if (!currentUser || currentOpenTopicId === null) return;
-    
+
         const replyBodyInput = document.getElementById('reply-topic-body') as HTMLTextAreaElement;
         const replyBody = replyBodyInput.value.trim();
-    
+
         if (!replyBody) {
             showToast('A resposta não pode estar vazia.', 'warning');
             return;
         }
-    
+
         const topic = forumTopics.find(t => t.id === currentOpenTopicId);
         if (topic) {
             const newReply: ForumReply = {
@@ -873,10 +961,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: replyBody,
                 createdAt: new Date().toISOString()
             };
-    
+
             topic.replies.push(newReply);
             saveForumTopics();
-            
+
             replyTopicForm.reset();
             renderTopicView(currentOpenTopicId);
         }
@@ -890,13 +978,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const isMobile = window.innerWidth < 768;
         const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
-        
+
         const calendarEvents = myAppointments.map(app => {
             const otherUserId = currentUser!.role === 'mentee' ? app.mentorId : app.menteeId;
             const otherUser = users.find(u => u.id === otherUserId);
 
-            const eventTitle = otherUser 
-                ? `Mentoria com ${otherUser.name}` 
+            const eventTitle = otherUser
+                ? `Mentoria com ${otherUser.name}`
                 : 'Mentoria (Usuário Removido)';
 
             let color = '#0d6efd';
@@ -921,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function () {
             locale: 'pt-br',
             buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
             allDayText: 'Dia',
-            headerToolbar: isMobile 
+            headerToolbar: isMobile
                 ? { left: 'prev,next', center: 'title', right: 'today' }
                 : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
             height: '100%',
@@ -958,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('Agendamento aceito com sucesso!', 'success');
         }
     }
-    
+
     function handleDeclineAppointment(appId: number): void {
         const appointment = appointments.find(app => app.id === appId);
         if (appointment) {
@@ -979,25 +1067,25 @@ document.addEventListener('DOMContentLoaded', function () {
     function openEditAppointmentModal(appId: number): void {
         const appointment = appointments.find(app => app.id === appId);
         if (!appointment) return;
-    
+
         appointmentToEditId = appId;
         (document.getElementById('edit-appointment-date') as HTMLInputElement).value = appointment.date;
         (document.getElementById('edit-appointment-time') as HTMLInputElement).value = appointment.time;
         (document.getElementById('edit-appointment-topic') as HTMLTextAreaElement).value = appointment.topic;
         editAppointmentModal.show();
     }
-    
+
     function handleEditAppointment(e: SubmitEvent): void {
         e.preventDefault();
         if (appointmentToEditId === null) return;
-    
+
         const appointment = appointments.find(app => app.id === appointmentToEditId);
         if (!appointment) return;
-    
+
         appointment.date = (document.getElementById('edit-appointment-date') as HTMLInputElement).value;
         appointment.time = (document.getElementById('edit-appointment-time') as HTMLInputElement).value;
         appointment.topic = (document.getElementById('edit-appointment-topic') as HTMLTextAreaElement).value;
-    
+
         saveAppointments();
         renderMentorDashboard();
         editAppointmentModal.hide();
@@ -1007,35 +1095,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderMentorDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentor') return;
-    
+
         const myAppointments = appointments.filter(app => app.mentorId === currentUser!.id);
-    
+
         const completedCount = myAppointments.filter(app => app.status === 'realizado' || app.status === 'avaliado').length;
         const mentees = new Set(myAppointments.map(app => app.menteeId));
         const menteeCount = mentees.size;
-    
+
         const upcomingAppointments = myAppointments
             .filter(app => new Date(`${app.date}T${app.time}`) >= new Date() && (app.status === 'pendente' || app.status === 'aceito'))
             .sort((a: Appointment, b: Appointment) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
-        
+
         const nextAppointment = upcomingAppointments[0];
-    
+
         (document.getElementById('mentor-stats-total') as HTMLElement).textContent = completedCount.toString();
         (document.getElementById('mentor-stats-mentees') as HTMLElement).textContent = menteeCount.toString();
         if (nextAppointment) {
             const mentee = users.find(u => u.id === nextAppointment.mentorId);
-            (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 
+            (document.getElementById('mentor-stats-next') as HTMLElement).textContent =
              `${new Date(nextAppointment.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} com ${mentee ? mentee.name : 'Desconhecido'}`;
         } else {
             (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 'Nenhum';
         }
-    
+
         const upcomingList = document.getElementById('upcoming-appointments-list') as HTMLElement;
         upcomingList.innerHTML = '';
         if (upcomingAppointments.length > 0) {
             upcomingAppointments.forEach(app => {
                 const mentee = users.find(u => u.id === app.menteeId);
-                
+
                 let actionButtons = '';
                 if (app.status === 'pendente') {
                     actionButtons = `
@@ -1074,12 +1162,12 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             upcomingList.innerHTML = '<p class="text-center text-muted p-3">Nenhum próximo encontro agendado.</p>';
         }
-    
+
         const pastAppointmentsList = document.getElementById('past-appointments-list') as HTMLElement;
         const pastAppointments = myAppointments
          .filter(app => new Date(`${app.date}T${app.time}`) < new Date() || ['recusado', 'realizado', 'avaliado'].includes(app.status))
          .sort((a: Appointment, b: Appointment) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
-        
+
         pastAppointmentsList.innerHTML = '';
         if (pastAppointments.length > 0) {
             pastAppointments.forEach(app => {
@@ -1105,16 +1193,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderMenteeDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentee') return;
-    
+
         const nextAppointmentContainer = document.getElementById('dashboard-next-appointment') as HTMLElement;
         const recentMentorsContainer = document.getElementById('dashboard-recent-mentors') as HTMLElement;
         const suggestedMentorsContainer = document.getElementById('dashboard-suggested-mentors') as HTMLElement;
-    
+
         const myAppointments = appointments.filter(app => app.menteeId === currentUser!.id);
         const nextAppointment = myAppointments
             .filter(app => app.status === 'aceito' && new Date(`${app.date}T${app.time}`) >= new Date())
             .sort((a: Appointment, b: Appointment) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())[0];
-    
+
         if (nextAppointment) {
             const mentor = users.find(u => u.id === nextAppointment.mentorId);
             nextAppointmentContainer.innerHTML = `
@@ -1129,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             nextAppointmentContainer.innerHTML = '<p class="text-muted">Nenhum próximo encontro agendado.</p>';
         }
-    
+
         const recentMentorIds = [...new Set(myAppointments.map(app => app.mentorId))].slice(0, 3);
         recentMentorsContainer.innerHTML = '';
         if (recentMentorIds.length > 0) {
@@ -1146,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             recentMentorsContainer.innerHTML = '<p class="text-muted p-3">Nenhuma interação recente.</p>';
         }
-    
+
         const suggestedMentors = users.filter(user => user.role === 'mentor' && user.course === currentUser!.course && user.id !== currentUser!.id).slice(0, 3);
         suggestedMentorsContainer.innerHTML = '';
         if (suggestedMentors.length > 0) {
@@ -1167,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (activeLink) activeLink.classList.add('active');
         views.forEach(view => view.classList.toggle('d-none', view.id !== targetViewId));
-        
+
         if (targetViewId === 'agendamento-section') {
             if (currentUser.role === 'mentee') {
                 mentorAppointmentView.classList.add('d-none');
@@ -1209,7 +1297,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- Inicialização e Event Listeners ---
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handlePublicRegister);
     showRegisterBtn.addEventListener('click', showRegisterFormView);
@@ -1245,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     addUserBtn.addEventListener('click', () => addUserModal.show());
     addUserForm.addEventListener('submit', handleAdminAddUser);
-    
+
     document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1287,14 +1374,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (upcomingAppointmentsList) {
         upcomingAppointmentsList.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
-            
+
             const acceptBtn = target.closest('.btn-accept-appointment');
             if (acceptBtn) {
                 const appId = parseInt(acceptBtn.getAttribute('data-id')!, 10);
                 handleAcceptAppointment(appId);
                 return;
             }
-    
+
             const declineBtn = target.closest('.btn-decline-appointment');
             if (declineBtn) {
                 const appId = parseInt(declineBtn.getAttribute('data-id')!, 10);
@@ -1360,6 +1447,21 @@ document.addEventListener('DOMContentLoaded', function () {
     createTopicBtn.addEventListener('click', () => createTopicModal.show());
     createTopicForm.addEventListener('submit', handleCreateTopic);
     replyTopicForm.addEventListener('submit', handleReplyToTopic);
-    
+
+    // D. Adicione os Event Listeners
+    // Finalmente, precisamos conectar a ação do clique à nossa nova função. A melhor forma é usar delegação de eventos no <ul> que contém as conversas. Também precisamos conectar o formulário de resposta à sua função.
+    conversationsListUl.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const conversationItem = target.closest('.list-group-item-action') as HTMLElement;
+
+        if (conversationItem && conversationItem.dataset.conversationWith) {
+            const partnerId = parseInt(conversationItem.dataset.conversationWith, 10);
+            renderConversationThread(partnerId);
+        }
+    });
+
+    const replyMessageForm = document.getElementById('form-reply-message') as HTMLFormElement;
+    replyMessageForm.addEventListener('submit', handleReplyToMessage);
+
     init();
 });
