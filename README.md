@@ -6,8 +6,6 @@ Este repositório contém o código-fonte do projeto **Mentoring**, um protótip
 
 A plataforma **Mentoring** foi concebida para enfrentar os desafios de evasão e dificuldades de aprendizado enfrentados por alunos ingressantes em cursos de Tecnologia da Informação. O principal objetivo é criar um ecossistema de apoio que conecta alunos novatos (mentorados) a alunos veteranos ou professores (mentores), facilitando a troca de conhecimento, experiências e oferecendo suporte acadêmico e pessoal.
 
-Este protótipo é uma **Single Page Application (SPA)** totalmente funcional no lado do cliente, utilizando o `localStorage` do navegador para simular um banco de dados e demonstrar todas as interações e funcionalidades propostas.
-
 ### ✨ Funcionalidades Principais
 
 *   **👤 Gestão de Contas:** Sistema completo de autenticação com cadastro, login e recuperação de senha.
