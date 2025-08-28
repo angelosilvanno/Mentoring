@@ -213,8 +213,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return `https://api.dicebear.com/8.x/bottts/svg?seed=${seed}`;
     }
 
-    // Passo 1: Criar a Função para Gerar as Estrelas
-    // Em qualquer lugar do seu app.ts (uma boa prática é colocar perto de outras funções auxiliares, como getAvatarUrl), adicione a seguinte função. Ela recebe a nota média e a quantidade de avaliações, e retorna o HTML com as estrelas correspondentes.
     function generateStarRatingHTML(averageRating: number, ratingCount: number): string {
         if (ratingCount === 0) {
             return '<span class="text-muted">Ainda não avaliado</span>';
@@ -256,8 +254,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDashboardUI(currentUser);
     }
 
-    // Passo 2: Atualizar a Função showMentorProfile
-    // Agora, vamos encontrar a função showMentorProfile e fazer uma pequena alteração para que ela use a nossa nova função generateStarRatingHTML. A mudança principal é como calculamos a média (para mantê-la como um número) e como chamamos a nova função.
     function showMentorProfile(mentorId: number): void {
         const mentor = users.find(user => user.id === mentorId);
         if (!mentor || !currentUser) return;
@@ -290,9 +286,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const historyList = document.getElementById('modal-mentor-history-list') as HTMLUListElement;
         historyList.innerHTML = '';
         const completedAppointments = appointments.filter(a => a.mentorId === mentor.id && (a.status === 'realizado' || a.status === 'avaliado')).sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
         if (completedAppointments.length > 0) {
             completedAppointments.forEach(app => {
-                historyList.innerHTML += `<li class="list-group-item small p-2">"${app.topic}" em ${new Date(app.date).toLocaleDateString()}</li>`;
+                const mentee = users.find(u => u.id === app.menteeId);
+                historyList.innerHTML += `<li class="list-group-item small p-2">"${app.topic}" com ${mentee ? mentee.name : 'Mentee'} em ${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</li>`;
             });
         } else {
             historyList.innerHTML = '<li class="list-group-item small text-muted p-2">Nenhum encontro finalizado.</li>';
@@ -308,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
         sendMessageFromProfileBtn.dataset.mentorId = mentor.id.toString();
         viewProfileModal.show();
     }
+    (window as any).showMentorProfile = showMentorProfile;
 
     function updateDashboardUI(user: User): void {
         sidebarUsername.textContent = user.name;
@@ -454,6 +453,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button class="btn btn-primary mt-auto btn-view-profile" data-id="${mentor.id}">Ver Perfil</button>
                     </div>
                 </div>
+            </div>
+        `;
+    }
+
+    function buildCompactMentorCard(mentor: User): string {
+        const skillBadge = mentor.skills.length > 0 
+            ? `<span class="badge rounded-pill text-bg-secondary fw-normal">${mentor.skills[0]}</span>` 
+            : '';
+    
+        return `
+            <div class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" style="cursor: pointer;" onclick="showMentorProfile(${mentor.id})">
+                <img src="${getAvatarUrl(mentor)}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
+                <div class="flex-grow-1">
+                    <h6 class="mb-0">${mentor.name}</h6>
+                    <small class="text-muted">${mentor.course}</small>
+                </div>
+                ${skillBadge}
             </div>
         `;
     }
@@ -1212,10 +1228,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderMenteeDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentee') return;
+
+        const ctaContainer = document.getElementById('dashboard-cta-container') as HTMLElement;
+        if (ctaContainer && (!currentUser.bio || currentUser.skills.length === 0)) {
+            ctaContainer.innerHTML = `
+                <div class="alert alert-primary" role="alert">
+                    <h5 class="alert-heading"><i class="bi bi-lightbulb me-2"></i>Dica!</h4>
+                    <p>Complete seu perfil para receber sugestões de mentores mais precisas. Conte-nos sobre suas dificuldades e interesses!</p>
+                    <hr>
+                    <button class="btn btn-primary fw-bold" onclick="document.getElementById('btn-edit-profile').click()">Editar meu perfil</button>
+                </div>
+            `;
+        } else if (ctaContainer) {
+            ctaContainer.innerHTML = '';
+        }
     
         const nextAppointmentContainer = document.getElementById('dashboard-next-appointment') as HTMLElement;
         const recentMentorsContainer = document.getElementById('dashboard-recent-mentors') as HTMLElement;
-        const suggestedMentorsContainer = document.getElementById('dashboard-suggested-mentors') as HTMLElement;
     
         const myAppointments = appointments.filter(app => app.menteeId === currentUser!.id);
         const nextAppointment = myAppointments
@@ -1244,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const mentor = users.find(u => u.id === mentorId);
                 if (mentor) {
                     recentMentorsContainer.innerHTML += `
-                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3" onclick="event.preventDefault(); showMentorProfile(${mentor.id})">
                             <img src="${getAvatarUrl(mentor)}" class="rounded-circle" width="35" height="35">
                             <span>${mentor.name}</span>
                         </a>`;
@@ -1254,14 +1283,18 @@ document.addEventListener('DOMContentLoaded', function () {
             recentMentorsContainer.innerHTML = '<p class="text-muted p-3">Nenhuma interação recente.</p>';
         }
     
-        const suggestedMentors = users.filter(user => user.role === 'mentor' && user.course === currentUser!.course && user.id !== currentUser!.id).slice(0, 3);
+        const suggestedMentorsContainer = document.getElementById('dashboard-suggested-mentors') as HTMLElement;
+        suggestedMentorsContainer.className = 'list-group'; 
+        
+        const suggestedMentors = users.filter(user => user.role === 'mentor' && user.course === currentUser!.course && user.id !== currentUser!.id).slice(0, 4);
+        
         suggestedMentorsContainer.innerHTML = '';
         if (suggestedMentors.length > 0) {
             suggestedMentors.forEach(mentor => {
-                suggestedMentorsContainer.innerHTML += buildMentorCard(mentor);
+                suggestedMentorsContainer.innerHTML += buildCompactMentorCard(mentor);
             });
         } else {
-            suggestedMentorsContainer.innerHTML = '<div class="col-12"><p class="text-muted text-center">Nenhum mentor sugerido no momento.</p></div>';
+            suggestedMentorsContainer.innerHTML = '<div class="col-12"><p class="text-muted text-center p-4">Nenhum mentor sugerido no momento.</p></div>';
         }
     }
 
@@ -1479,6 +1512,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const replyMessageForm = document.getElementById('form-reply-message') as HTMLFormElement;
     replyMessageForm.addEventListener('submit', handleReplyToMessage);
+
+    const stars = feedbackStarsContainer.querySelectorAll('i');
+    stars.forEach((star, index) => {
+        star.addEventListener('click', () => {
+            const rating = index + 1;
+            feedbackStarsContainer.dataset.rating = rating.toString();
+            stars.forEach((s, i) => {
+                s.classList.toggle('bi-star-fill', i < rating);
+                s.classList.toggle('bi-star', i >= rating);
+                s.classList.toggle('text-warning', i < rating);
+                s.classList.toggle('text-secondary', i >= rating);
+            });
+        });
+    });
 
     init();
 });
