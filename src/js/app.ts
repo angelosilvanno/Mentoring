@@ -431,14 +431,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const allRatings = appointments
             .filter(a => a.mentorId === mentor.id && a.feedback?.rating)
             .map(a => a.feedback!.rating);
-        const averageRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : '0';
-        const ratingHTML = parseFloat(averageRating) > 0 ?
-            `<div class="d-flex align-items-center justify-content-center small text-muted mb-2">
-                <i class="bi bi-star-fill text-warning me-1"></i>
-                <span>${averageRating} (${allRatings.length})</span>
-            </div>` :
-            '<div class="small text-muted mb-2">Ainda não avaliado</div>';
+        const ratingCount = allRatings.length;
+        const averageRating = ratingCount > 0 ? (allRatings.reduce((a, b) => a + b, 0) / ratingCount) : 0;
+    
+        const ratingHTML = generateStarRatingHTML(averageRating, ratingCount);
+    
         const skillBadges = mentor.skills.slice(0, 2).map(skill => `<span class="badge rounded-pill text-bg-primary bg-opacity-75 me-1 mb-1">${skill}</span>`).join('');
+        
         return `
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card mentor-card h-100 shadow-sm text-center">
@@ -446,7 +445,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <img src="${getAvatarUrl(mentor)}" class="rounded-circle mb-3 mx-auto" style="width: 90px; height: 90px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar de ${mentor.name}">
                         <h5 class="card-title mb-1">${mentor.name}</h5>
                         <p class="card-text text-muted small">${mentor.course}</p>
-                        ${ratingHTML}
+                        
+                        <div class="d-flex justify-content-center mb-2">
+                            ${ratingHTML}
+                        </div>
+
                         <div class="my-3 flex-grow-1">
                             ${skillBadges || '<p class="small text-muted">Nenhuma habilidade informada.</p>'}
                         </div>
