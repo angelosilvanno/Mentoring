@@ -1207,6 +1207,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pastAppointments.length > 0) {
             pastAppointments.forEach(app => {
                 const mentee = users.find(u => u.id === app.menteeId);
+                let actionButton = '';
+                if (currentUser && currentUser.role === 'mentee' && app.status === 'realizado') {
+                    actionButton = `<button class="btn btn-primary btn-sm mt-2 btn-evaluate-appointment" data-id="${app.id}">Avaliar Encontro</button>`;
+                }
+
                 pastAppointmentsList.innerHTML += `
                     <div class="list-group-item d-flex align-items-center gap-3">
                         <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="50" height="50" alt="Avatar">
@@ -1217,6 +1222,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="text-sm-end">
                             <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
                             <span class="badge rounded-pill bg-secondary">${app.status}</span>
+                            ${actionButton}
                         </div>
                     </div>
                 `;
