@@ -285,12 +285,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const historyList = document.getElementById('modal-mentor-history-list') as HTMLUListElement;
         historyList.innerHTML = '';
-        const completedAppointments = appointments.filter(a => a.mentorId === mentor.id && (a.status === 'realizado' || a.status === 'avaliado')).sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
+
+        const completedAppointments = appointments.filter(a => 
+            a.mentorId === mentor.id && 
+            a.menteeId === currentUser!.id &&
+            (a.status === 'realizado' || a.status === 'avaliado')
+        ).sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
         if (completedAppointments.length > 0) {
             completedAppointments.forEach(app => {
-                const mentee = users.find(u => u.id === app.menteeId);
-                historyList.innerHTML += `<li class="list-group-item small p-2">"${app.topic}" com ${mentee ? mentee.name : 'Mentee'} em ${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</li>`;
+                let actionArea = '';
+
+                if (app.status === 'realizado') {
+                    actionArea = `<button class="btn btn-primary btn-sm btn-evaluate-appointment" data-id="${app.id}">Avaliar</button>`;
+                } 
+                else if (app.status === 'avaliado' && app.feedback) {
+                    let stars = '';
+                    for(let i = 1; i <= 5; i++) {
+                        stars += `<i class="bi bi-star-fill ${i <= app.feedback.rating ? 'text-warning' : 'text-secondary'}"></i>`;
+                    }
+                    actionArea = `<div class="text-nowrap">${stars}</div>`;
+                }
+
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center p-2';
+                listItem.innerHTML = `
+                    <span class="small">"${app.topic}" em ${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
+                    ${actionArea}
+                `;
+                historyList.appendChild(listItem);
             });
         } else {
             historyList.innerHTML = '<li class="list-group-item small text-muted p-2">Nenhum encontro finalizado.</li>';
@@ -902,7 +925,10 @@ document.addEventListener('DOMContentLoaded', function () {
         saveAppointments();
         showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
         feedbackModal.hide();
-        renderAppointments();
+        
+        if(currentUser?.role === 'mentor') {
+            renderMentorDashboard();
+        }
     }
     
     function handleCreateTopic(e: SubmitEvent) {
@@ -1131,6 +1157,16 @@ document.addEventListener('DOMContentLoaded', function () {
         appointmentToEditId = null;
     }
 
+    function handleMarkAsCompleted(appId: number): void {
+        const appointment = appointments.find(app => app.id === appId);
+        if (appointment && currentUser && currentUser.role === 'mentor') {
+            appointment.status = 'realizado';
+            saveAppointments();
+            renderMentorDashboard();
+            showToast('Encontro marcado como realizado! O mentee já pode avaliar.', 'success');
+        }
+    }
+
     function renderMentorDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentor') return;
     
@@ -1149,7 +1185,7 @@ document.addEventListener('DOMContentLoaded', function () {
         (document.getElementById('mentor-stats-total') as HTMLElement).textContent = completedCount.toString();
         (document.getElementById('mentor-stats-mentees') as HTMLElement).textContent = menteeCount.toString();
         if (nextAppointment) {
-            const mentee = users.find(u => u.id === nextAppointment.mentorId);
+            const mentee = users.find(u => u.id === nextAppointment.menteeId);
             (document.getElementById('mentor-stats-next') as HTMLElement).textContent = 
              `${new Date(nextAppointment.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} com ${mentee ? mentee.name : 'Desconhecido'}`;
         } else {
@@ -1210,9 +1246,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pastAppointments.length > 0) {
             pastAppointments.forEach(app => {
                 const mentee = users.find(u => u.id === app.menteeId);
-                let actionButton = '';
-                if (currentUser && currentUser.role === 'mentee' && app.status === 'realizado') {
-                    actionButton = `<button class="btn btn-primary btn-sm mt-2 btn-evaluate-appointment" data-id="${app.id}">Avaliar Encontro</button>`;
+                let actionArea = `<span class="badge rounded-pill bg-secondary">${app.status}</span>`;
+                const isPast = new Date(`${app.date}T${app.time}`) < new Date();
+
+                if (currentUser && currentUser.role === 'mentor' && app.status === 'aceito' && isPast) {
+                    actionArea = `<button class="btn btn-success btn-sm btn-mark-completed" data-id="${app.id}">Marcar como Realizado</button>`;
+                }
+
+                if (app.status === 'avaliado') {
+                    actionArea = `<span class="badge bg-light text-dark">Avaliado</span>`;
                 }
 
                 pastAppointmentsList.innerHTML += `
@@ -1224,8 +1266,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         <div class="text-sm-end">
                             <div class="fw-bold">${new Date(app.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
-                            <span class="badge rounded-pill bg-secondary">${app.status}</span>
-                            ${actionButton}
+                            <div class="mt-1">
+                                ${actionArea}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1459,6 +1502,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    document.getElementById('past-appointments-list')!.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const markCompletedBtn = target.closest('.btn-mark-completed');
+        if (markCompletedBtn) {
+            const appId = parseInt(markCompletedBtn.getAttribute('data-id')!, 10);
+            handleMarkAsCompleted(appId);
+        }
+    });
+
     const forumListContainer = document.querySelector('#forum-card-body .list-group');
     if (forumListContainer) {
         forumListContainer.addEventListener('click', (e) => {
@@ -1534,6 +1586,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 s.classList.toggle('text-secondary', i >= rating);
             });
         });
+    });
+
+    document.getElementById('modal-mentor-history-list')!.addEventListener('click', e => {
+        const target = e.target as HTMLElement;
+        const evaluateBtn = target.closest('.btn-evaluate-appointment');
+    
+        if (evaluateBtn) {
+            const appId = parseInt(evaluateBtn.getAttribute('data-id')!, 10);
+            const appointment = appointments.find(a => a.id === appId);
+            const mentor = users.find(u => u.id === appointment?.mentorId);
+    
+            if (appointment && mentor) {
+                (document.getElementById('feedback-appointment-id') as HTMLInputElement).value = appId.toString();
+                (document.getElementById('feedback-mentor-name') as HTMLElement).textContent = mentor.name;
+                
+                feedbackForm.reset();
+                feedbackStarsContainer.dataset.rating = '0';
+                feedbackStarsContainer.querySelectorAll('i').forEach(s => {
+                    s.className = 'bi bi-star text-secondary';
+                });
+                
+                viewProfileModal.hide();
+                feedbackModal.show();
+            }
+        }
     });
 
     init();
