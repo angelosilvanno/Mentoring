@@ -99,6 +99,8 @@
               <i class="bi bi-chat-left-text"></i> Mensagens</a></li>
             <li class="nav-item" id="nav-forum"><a href="#" class="nav-link" data-view="forum-section">
               <i class="bi bi-people"></i> Fórum</a></li>
+            <li class="nav-item d-none" id="nav-conteudo"><a href="#" class="nav-link" data-view="content-management-section">
+              <i class="bi bi-book"></i> Conteúdos</a></li>
             <li class="nav-item d-none" id="nav-admin"><a href="#" class="nav-link" data-view="admin-panel">
               <i class="bi bi-sliders"></i> Administração</a></li>
         </ul>
@@ -270,6 +272,19 @@
                   <h2 class="fs-5 mb-0">Fórum da Comunidade</h2><button class="btn btn-primary btn-sm" id="btn-create-topic">
                     <i class="bi bi-plus-circle"></i> Criar Tópico</button></div><div class="card-body" id="forum-card-body"><div class="list-group"></div></div></div></section>
               
+              <section id="content-management-section" class="content-view col-12 d-none">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="fs-5 mb-0">Gestão de Conteúdo</h2>
+                        <button class="btn btn-primary btn-sm" id="btn-create-content">
+                            <i class="bi bi-plus-circle"></i> Criar Novo Conteúdo
+                        </button>
+                    </div>
+                    <div class="card-body" id="content-list-container">
+                    </div>
+                </div>
+              </section>
+
               <section id="admin-panel" class="content-view col-12 d-none">
                 <div class="row g-4">
                   <div class="col-md-3">
@@ -456,6 +471,12 @@ Quartas: 14h - 16h"></textarea></div>
                         <label for="edit-appointment-topic" class="form-label">Novo Tópico Principal</label>
                         <textarea id="edit-appointment-topic" class="form-control" rows="3" required></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="edit-appointment-content" class="form-label">Vincular Conteúdo de Apoio</label>
+                        <select id="edit-appointment-content" class="form-select">
+                            <option value="">Nenhum</option>
+                        </select>
+                    </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="edit-notify-mentee">
                         <label class="form-check-label" for="edit-notify-mentee">Notificar mentorado sobre a alteração</label>
@@ -468,6 +489,59 @@ Quartas: 14h - 16h"></textarea></div>
             </div>
         </div>
     </div>
+  </div>
+  
+  <div class="modal fade" id="manageContentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="manageContentModalLabel">Gerenciar Conteúdo</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="form-manage-content">
+            <input type="hidden" id="content-id">
+            <div class="mb-3">
+              <label for="content-title" class="form-label">Título do Conteúdo</label>
+              <input type="text" id="content-title" class="form-control" placeholder="Ex: Introdução a Git e GitHub" required>
+            </div>
+            <div class="mb-3">
+              <label for="content-description" class="form-label">Descrição</label>
+              <textarea id="content-description" class="form-control" rows="3" placeholder="Um breve resumo sobre o que este material aborda." required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="content-resources" class="form-label">Recursos (Links)</label>
+              <textarea id="content-resources" class="form-control" rows="5" placeholder="Cole aqui links úteis, um por linha. Ex:&#10;https://site.com/artigo&#10;https://youtube.com/video"></textarea>
+            </div>
+            <div class="modal-footer px-0 pb-0">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Salvar Conteúdo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="viewContentModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="viewContentModalLabel">Material de Apoio</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" id="viewContentModalBody">
+                  <h3 id="view-content-title"></h3>
+                  <p id="view-content-description" class="text-muted"></p>
+                  <hr>
+                  <h5>Recursos Adicionais</h5>
+                  <div id="view-content-resources"></div>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fechar</button>
+              </div>
+          </div>
+      </div>
   </div>
 
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
