@@ -9,6 +9,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
+// 1. Novas Interfaces e Variáveis de Estado
 interface User {
   id: number;
   username: string;
@@ -29,6 +30,7 @@ interface AppointmentFeedback {
   date: string;
 }
 
+// 2. Modificação na Interface Appointment
 interface Appointment {
   id: number;
   mentorId: number;
@@ -39,6 +41,7 @@ interface Appointment {
   status: 'pendente' | 'aceito' | 'recusado' | 'realizado' | 'avaliado';
   createdAt: string;
   feedback?: AppointmentFeedback;
+  linkedContentId?: number;
 }
 
 interface Message {
@@ -64,6 +67,15 @@ interface ForumTopic {
   authorId: number;
   createdAt: string;
   replies: ForumReply[];
+}
+
+interface Content {
+    id: number;
+    authorId: number;
+    title: string;
+    description: string;
+    resources: string;
+    createdAt: string;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -139,17 +151,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
     let forumTopics: ForumTopic[] = JSON.parse(localStorage.getItem('mentoring_forum_topics') || '[]');
+    let contents: Content[] = JSON.parse(localStorage.getItem('mentoring_contents') || '[]');
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
     let currentOpenTopicId: number | null = null;
     let userToResetPasswordId: number | null = null;
     let appointmentToEditId: number | null = null;
+    let contentToEditId: number | null = null;
     let currentOpenConversationPartnerId: number | null = null;
 
     function saveUsers(): void { localStorage.setItem('mentoring_users', JSON.stringify(users)); }
     function saveAppointments(): void { localStorage.setItem('mentoring_appointments', JSON.stringify(appointments)); }
     function saveMessages(): void { localStorage.setItem('mentoring_messages', JSON.stringify(messages)); }
     function saveForumTopics(): void { localStorage.setItem('mentoring_forum_topics', JSON.stringify(forumTopics)); }
+    function saveContents(): void { localStorage.setItem('mentoring_contents', JSON.stringify(contents)); }
     function setCurrentUser(user: User): void { currentUser = user; sessionStorage.setItem('mentoring_currentUser', JSON.stringify(user)); }
     function clearCurrentUser(): void { currentUser = null; sessionStorage.removeItem('mentoring_currentUser'); }
 
@@ -348,6 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
             navItems.agendamentos?.classList.remove('d-none');
             navItems.mensagens?.classList.remove('d-none');
             navItems.forum?.classList.remove('d-none');
+            document.getElementById('nav-conteudo')?.classList.remove('d-none');
             switchView('agendamento-section');
         } else if (user.role === 'admin') {
             navItems.admin?.classList.remove('d-none');
@@ -703,15 +719,63 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // 3. Implementando RF05 (Agendamento Semanal)
     function handleRequestMentorshipSubmit(e: SubmitEvent) {
         e.preventDefault();
-        if (!currentUser) return;
+        if (!currentUser || currentUser.role !== 'mentee') return;
+
+        const WEEKLY_APPOINTMENT_LIMIT = 1;
+
+        function getWeekBounds(date: Date): { start: Date, end: Date } {
+            const firstDay = new Date(date);
+            const dayOfWeek = firstDay.getDay();
+            const diff = firstDay.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const startOfWeek = new Date(firstDay.setDate(diff));
+            startOfWeek.setHours(0, 0, 0, 0);
+    
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+            return { start: startOfWeek, end: endOfWeek };
+        }
+    
+        const requestedDateStr = (document.getElementById('mentorship-date') as HTMLInputElement).value;
+        const requestedDate = new Date(`${requestedDateStr}T00:00:00`);
+    
+        const { start, end } = getWeekBounds(requestedDate);
+    
+        const appointmentsInWeek = appointments.filter(app => {
+            if (app.menteeId !== currentUser!.id) return false;
+            const appDate = new Date(`${app.date}T00:00:00`);
+            return appDate >= start && appDate <= end && (app.status === 'pendente' || app.status === 'aceito');
+        });
+    
+        if (appointmentsInWeek.length >= WEEKLY_APPOINTMENT_LIMIT) {
+            showToast(`Você já atingiu o limite de ${WEEKLY_APPOINTMENT_LIMIT} agendamento(s) para esta semana.`, 'warning');
+            return;
+        }
+
         const mentorId = parseInt((document.getElementById('mentorship-mentor-id') as HTMLInputElement).value, 10);
         const date = (document.getElementById('mentorship-date') as HTMLInputElement).value;
         const time = (document.getElementById('mentorship-time') as HTMLInputElement).value;
         const topic = (document.getElementById('mentorship-topic') as HTMLTextAreaElement).value;
-        if (!mentorId || !date || !time || !topic) { showToast("Preencha todos os campos.", 'warning'); return; }
-        appointments.push({ id: Date.now(), mentorId: mentorId, menteeId: currentUser.id, date, time, topic, status: 'pendente', createdAt: new Date().toISOString() });
+
+        if (!mentorId || !date || !time || !topic) { 
+            showToast("Preencha todos os campos.", 'warning'); 
+            return; 
+        }
+
+        appointments.push({ 
+            id: Date.now(), 
+            mentorId: mentorId, 
+            menteeId: currentUser.id, 
+            date, 
+            time, 
+            topic, 
+            status: 'pendente', 
+            createdAt: new Date().toISOString() 
+        });
+
         saveAppointments();
         showToast('Solicitação de agendamento enviada!', 'success');
         requestMentorshipModal.hide();
@@ -1128,17 +1192,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // 5.3. Modifique openEditAppointmentModal para popular o <select> de conteúdos:
     function openEditAppointmentModal(appId: number): void {
         const appointment = appointments.find(app => app.id === appId);
-        if (!appointment) return;
+        if (!appointment || !currentUser || currentUser.role !== 'mentor') return;
     
         appointmentToEditId = appId;
         (document.getElementById('edit-appointment-date') as HTMLInputElement).value = appointment.date;
         (document.getElementById('edit-appointment-time') as HTMLInputElement).value = appointment.time;
         (document.getElementById('edit-appointment-topic') as HTMLTextAreaElement).value = appointment.topic;
+
+        const contentSelect = document.getElementById('edit-appointment-content') as HTMLSelectElement;
+        contentSelect.innerHTML = '<option value="">Nenhum</option>';
+        const myContents = contents.filter(c => c.authorId === currentUser!.id);
+        myContents.forEach(content => {
+            const option = new Option(content.title, content.id.toString());
+            contentSelect.add(option);
+        });
+        contentSelect.value = appointment.linkedContentId?.toString() || '';
+    
         editAppointmentModal.show();
     }
     
+    // 5.4. Modifique handleEditAppointment para salvar o conteúdo vinculado:
     function handleEditAppointment(e: SubmitEvent): void {
         e.preventDefault();
         if (appointmentToEditId === null) return;
@@ -1149,6 +1225,9 @@ document.addEventListener('DOMContentLoaded', function () {
         appointment.date = (document.getElementById('edit-appointment-date') as HTMLInputElement).value;
         appointment.time = (document.getElementById('edit-appointment-time') as HTMLInputElement).value;
         appointment.topic = (document.getElementById('edit-appointment-topic') as HTMLTextAreaElement).value;
+        
+        const selectedContentId = (document.getElementById('edit-appointment-content') as HTMLSelectElement).value;
+        appointment.linkedContentId = selectedContentId ? parseInt(selectedContentId, 10) : undefined;
     
         saveAppointments();
         renderMentorDashboard();
@@ -1382,7 +1461,122 @@ document.addEventListener('DOMContentLoaded', function () {
             renderDiscoveryPage();
         } else if (targetViewId === 'dashboard-section') {
             renderMenteeDashboard();
+        } else if (targetViewId === 'content-management-section') {
+            renderContentManagement();
         }
+    }
+
+    // 4. Implementando RF07 e RF08 (Gestão de Conteúdo)
+    function renderContentManagement(): void {
+        if (!currentUser || currentUser.role !== 'mentor') return;
+        const container = document.getElementById('content-list-container') as HTMLElement;
+        container.innerHTML = '';
+        const myContents = contents.filter(c => c.authorId === currentUser!.id);
+    
+        if (myContents.length === 0) {
+            container.innerHTML = '<div class="text-center p-5 text-muted"><i class="bi bi-journal-bookmark fs-1"></i><h5 class="mt-3">Nenhum conteúdo criado</h5><p>Crie materiais de apoio reutilizáveis para suas mentorias.</p></div>';
+            return;
+        }
+    
+        const contentList = document.createElement('div');
+        contentList.className = 'list-group';
+        myContents.forEach(content => {
+            contentList.innerHTML += `
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${content.title}</h5>
+                        <small>Criado em ${new Date(content.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <p class="mb-1">${content.description}</p>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-primary btn-view-content" data-id="${content.id}">Visualizar</button>
+                        <button class="btn btn-sm btn-outline-secondary btn-edit-content" data-id="${content.id}">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete-content" data-id="${content.id}">Excluir</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.appendChild(contentList);
+    }
+    
+    function openManageContentModal(contentId: number | null = null): void {
+        const modal = new bootstrap.Modal(document.getElementById('manageContentModal') as HTMLElement);
+        const form = document.getElementById('form-manage-content') as HTMLFormElement;
+        form.reset();
+        contentToEditId = contentId;
+        if (contentId) {
+            const content = contents.find(c => c.id === contentId);
+            if (content) {
+                (document.getElementById('content-title') as HTMLInputElement).value = content.title;
+                (document.getElementById('content-description') as HTMLTextAreaElement).value = content.description;
+                (document.getElementById('content-resources') as HTMLTextAreaElement).value = content.resources;
+            }
+        }
+        modal.show();
+    }
+    
+    function handleManageContentSubmit(e: SubmitEvent): void {
+        e.preventDefault();
+        if (!currentUser || currentUser.role !== 'mentor') return;
+    
+        const title = (document.getElementById('content-title') as HTMLInputElement).value;
+        const description = (document.getElementById('content-description') as HTMLTextAreaElement).value;
+        const resources = (document.getElementById('content-resources') as HTMLTextAreaElement).value;
+    
+        if (!title || !description) {
+            showToast('Título e descrição são obrigatórios.', 'warning');
+            return;
+        }
+    
+        if (contentToEditId) {
+            const contentIndex = contents.findIndex(c => c.id === contentToEditId);
+            if (contentIndex > -1) {
+                contents[contentIndex] = { ...contents[contentIndex], title, description, resources };
+                showToast('Conteúdo atualizado com sucesso!', 'success');
+            }
+        } else {
+            const newContent: Content = {
+                id: Date.now(),
+                authorId: currentUser.id,
+                title, description, resources,
+                createdAt: new Date().toISOString()
+            };
+            contents.push(newContent);
+            showToast('Conteúdo criado com sucesso!', 'success');
+        }
+    
+        saveContents();
+        renderContentManagement();
+        contentToEditId = null;
+        (new bootstrap.Modal(document.getElementById('manageContentModal') as HTMLElement)).hide();
+    }
+    
+    function handleDeleteContent(contentId: number): void {
+        showConfirm('Excluir Conteúdo', 'Tem certeza que deseja excluir este material? Esta ação não pode ser desfeita.', () => {
+            contents = contents.filter(c => c.id !== contentId);
+            saveContents();
+            renderContentManagement();
+            showToast('Conteúdo excluído.', 'success');
+        });
+    }
+    
+    function showViewContentModal(contentId: number): void {
+        const content = contents.find(c => c.id === contentId);
+        if (!content) return;
+        const modal = new bootstrap.Modal(document.getElementById('viewContentModal') as HTMLElement);
+        (document.getElementById('view-content-title') as HTMLElement).textContent = content.title;
+        (document.getElementById('view-content-description') as HTMLElement).textContent = content.description;
+        const resourcesContainer = document.getElementById('view-content-resources') as HTMLElement;
+        resourcesContainer.innerHTML = '';
+        content.resources.split('\n').filter(Boolean).forEach(link => {
+            try {
+                const url = new URL(link);
+                resourcesContainer.innerHTML += `<a href="${url.href}" target="_blank" class="btn btn-outline-primary mb-2 d-block text-start text-truncate"><i class="bi bi-link-45deg me-2"></i>${url.hostname}</a>`;
+            } catch (e) {
+                 resourcesContainer.innerHTML += `<p class="text-muted">${link}</p>`;
+            }
+        });
+        modal.show();
     }
 
     function init(): void {
@@ -1611,6 +1805,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 feedbackModal.show();
             }
         }
+    });
+
+    // 5.5. Adicione os novos Event Listeners no final do arquivo:
+    document.getElementById('btn-create-content')?.addEventListener('click', () => openManageContentModal());
+    document.getElementById('form-manage-content')?.addEventListener('submit', handleManageContentSubmit);
+
+    document.getElementById('content-list-container')?.addEventListener('click', e => {
+        const target = e.target as HTMLElement;
+        const viewBtn = target.closest('.btn-view-content');
+        if (viewBtn) showViewContentModal(parseInt(viewBtn.getAttribute('data-id')!, 10));
+        
+        const editBtn = target.closest('.btn-edit-content');
+        if (editBtn) openManageContentModal(parseInt(editBtn.getAttribute('data-id')!, 10));
+    
+        const deleteBtn = target.closest('.btn-delete-content');
+        if (deleteBtn) handleDeleteContent(parseInt(deleteBtn.getAttribute('data-id')!, 10));
     });
 
     init();
