@@ -9,7 +9,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
-// 1. Novas Interfaces e Variáveis de Estado
 interface User {
   id: number;
   username: string;
@@ -30,7 +29,6 @@ interface AppointmentFeedback {
   date: string;
 }
 
-// 2. Modificação na Interface Appointment
 interface Appointment {
   id: number;
   mentorId: number;
@@ -113,39 +111,40 @@ document.addEventListener('DOMContentLoaded', function () {
         admin: document.getElementById('nav-admin'),
     };
     const editProfileBtn = document.getElementById('btn-edit-profile') as HTMLButtonElement;
-    const editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal') as HTMLElement);
     const editProfileForm = document.getElementById('form-edit-profile') as HTMLFormElement;
     const addUserBtn = document.getElementById('btn-add-user') as HTMLButtonElement;
-    const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal') as HTMLElement);
     const addUserForm = document.getElementById('form-add-user') as HTMLFormElement;
-    const viewProfileModal = new bootstrap.Modal(document.getElementById('viewProfileModal') as HTMLElement);
     const requestMentorshipBtn = document.getElementById('btn-request-mentorship') as HTMLButtonElement;
     const sendMessageFromProfileBtn = document.getElementById('btn-send-message-from-profile') as HTMLButtonElement;
-    const composeMessageModal = new bootstrap.Modal(document.getElementById('composeMessageModal') as HTMLElement);
     const composeMessageForm = document.getElementById('form-compose-message') as HTMLFormElement;
     const conversationsListUl = document.getElementById('conversations-list-ul') as HTMLUListElement;
-    const requestMentorshipModal = new bootstrap.Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
     const requestMentorshipForm = document.getElementById('form-request-mentorship') as HTMLFormElement;
-    const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal') as HTMLElement);
     const feedbackForm = document.getElementById('form-send-feedback') as HTMLFormElement;
     const feedbackStarsContainer = document.getElementById('feedback-stars') as HTMLElement;
     const createTopicBtn = document.getElementById('btn-create-topic') as HTMLButtonElement;
-    const createTopicModal = new bootstrap.Modal(document.getElementById('createTopicModal') as HTMLElement);
     const createTopicForm = document.getElementById('form-create-topic') as HTMLFormElement;
-    const viewTopicModal = new bootstrap.Modal(document.getElementById('viewTopicModal') as HTMLElement);
     const replyTopicForm = document.getElementById('form-reply-topic') as HTMLFormElement;
-    const editAppointmentModal = new bootstrap.Modal(document.getElementById('editAppointmentModal') as HTMLElement);
     const editAppointmentForm = document.getElementById('form-edit-appointment') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
     const mobileHeaderTitle = document.getElementById('mobile-header-title') as HTMLElement;
+
     const toastElement = document.getElementById('appToast') as HTMLElement;
     const appToast = new bootstrap.Toast(toastElement, { delay: 4000 });
-    const confirmModalElement = document.getElementById('confirmModal') as HTMLElement;
-    const appConfirmModal = new bootstrap.Modal(confirmModalElement);
-    const infoModalElement = document.getElementById('infoModal') as HTMLElement;
-    const appInfoModal = new bootstrap.Modal(infoModalElement);
+    const editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal') as HTMLElement);
+    const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal') as HTMLElement);
+    const viewProfileModal = new bootstrap.Modal(document.getElementById('viewProfileModal') as HTMLElement);
+    const composeMessageModal = new bootstrap.Modal(document.getElementById('composeMessageModal') as HTMLElement);
+    const requestMentorshipModal = new bootstrap.Modal(document.getElementById('requestMentorshipModal') as HTMLElement);
+    const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal') as HTMLElement);
+    const createTopicModal = new bootstrap.Modal(document.getElementById('createTopicModal') as HTMLElement);
+    const viewTopicModal = new bootstrap.Modal(document.getElementById('viewTopicModal') as HTMLElement);
+    const editAppointmentModal = new bootstrap.Modal(document.getElementById('editAppointmentModal') as HTMLElement);
+    const manageContentModal = new bootstrap.Modal(document.getElementById('manageContentModal') as HTMLElement);
+    const viewContentModal = new bootstrap.Modal(document.getElementById('viewContentModal') as HTMLElement);
+    const appConfirmModal = new bootstrap.Modal(document.getElementById('confirmModal') as HTMLElement);
+    const appInfoModal = new bootstrap.Modal(document.getElementById('infoModal') as HTMLElement);
 
     let users: User[] = JSON.parse(localStorage.getItem('mentoring_users') || '[]');
     let appointments: Appointment[] = JSON.parse(localStorage.getItem('mentoring_appointments') || '[]');
@@ -719,7 +718,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // 3. Implementando RF05 (Agendamento Semanal)
     function handleRequestMentorshipSubmit(e: SubmitEvent) {
         e.preventDefault();
         if (!currentUser || currentUser.role !== 'mentee') return;
@@ -817,7 +815,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         currentOpenConversationPartnerId = partnerId;
 
-        const modal = new bootstrap.Modal(document.getElementById('viewConversationModal') as HTMLElement);
         const modalTitle = document.getElementById('viewConversationModalLabel') as HTMLElement;
         const modalBody = document.getElementById('conversation-thread-body') as HTMLElement;
 
@@ -848,8 +845,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 modalBody.innerHTML += messageHtml;
             });
         }
-
-        modal.show();
+        
+        const viewConversationModal = new bootstrap.Modal(document.getElementById('viewConversationModal') as HTMLElement);
+        viewConversationModal.show();
         setTimeout(() => {
             modalBody.scrollTop = modalBody.scrollHeight;
         }, 100);
@@ -1192,7 +1190,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // 5.3. Modifique openEditAppointmentModal para popular o <select> de conteúdos:
     function openEditAppointmentModal(appId: number): void {
         const appointment = appointments.find(app => app.id === appId);
         if (!appointment || !currentUser || currentUser.role !== 'mentor') return;
@@ -1214,7 +1211,6 @@ document.addEventListener('DOMContentLoaded', function () {
         editAppointmentModal.show();
     }
     
-    // 5.4. Modifique handleEditAppointment para salvar o conteúdo vinculado:
     function handleEditAppointment(e: SubmitEvent): void {
         e.preventDefault();
         if (appointmentToEditId === null) return;
@@ -1466,7 +1462,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // 4. Implementando RF07 e RF08 (Gestão de Conteúdo)
     function renderContentManagement(): void {
         if (!currentUser || currentUser.role !== 'mentor') return;
         const container = document.getElementById('content-list-container') as HTMLElement;
@@ -1500,7 +1495,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function openManageContentModal(contentId: number | null = null): void {
-        const modal = new bootstrap.Modal(document.getElementById('manageContentModal') as HTMLElement);
         const form = document.getElementById('form-manage-content') as HTMLFormElement;
         form.reset();
         contentToEditId = contentId;
@@ -1512,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 (document.getElementById('content-resources') as HTMLTextAreaElement).value = content.resources;
             }
         }
-        modal.show();
+        manageContentModal.show();
     }
     
     function handleManageContentSubmit(e: SubmitEvent): void {
@@ -1548,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', function () {
         saveContents();
         renderContentManagement();
         contentToEditId = null;
-        (new bootstrap.Modal(document.getElementById('manageContentModal') as HTMLElement)).hide();
+        manageContentModal.hide();
     }
     
     function handleDeleteContent(contentId: number): void {
@@ -1563,7 +1557,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function showViewContentModal(contentId: number): void {
         const content = contents.find(c => c.id === contentId);
         if (!content) return;
-        const modal = new bootstrap.Modal(document.getElementById('viewContentModal') as HTMLElement);
         (document.getElementById('view-content-title') as HTMLElement).textContent = content.title;
         (document.getElementById('view-content-description') as HTMLElement).textContent = content.description;
         const resourcesContainer = document.getElementById('view-content-resources') as HTMLElement;
@@ -1576,7 +1569,7 @@ document.addEventListener('DOMContentLoaded', function () {
                  resourcesContainer.innerHTML += `<p class="text-muted">${link}</p>`;
             }
         });
-        modal.show();
+        viewContentModal.show();
     }
 
     function init(): void {
@@ -1807,7 +1800,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 5.5. Adicione os novos Event Listeners no final do arquivo:
     document.getElementById('btn-create-content')?.addEventListener('click', () => openManageContentModal());
     document.getElementById('form-manage-content')?.addEventListener('submit', handleManageContentSubmit);
 
