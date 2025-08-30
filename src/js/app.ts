@@ -915,7 +915,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         height="315" 
                         src="https://www.youtube.com/embed/videoseries?list=${playlistId}" 
                         title="YouTube video player" 
-                        frameborder="0" 
+                        frameBorder="0" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                         allowfullscreen>
                     </iframe>
@@ -933,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         height="315" 
                         src="https://www.youtube.com/embed/${videoId}" 
                         title="YouTube video player" 
-                        frameborder="0" 
+                        frameBorder="0" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                         allowfullscreen>
                     </iframe>
@@ -1322,16 +1322,14 @@ document.addEventListener('DOMContentLoaded', function () {
             pastAppointments.forEach(app => {
                 const mentee = users.find(u => u.id === app.menteeId);
                 let actionArea = `<span class="badge rounded-pill bg-secondary">${app.status}</span>`;
-                const isPast = new Date(`${app.date}T${app.time}`) < new Date();
-
-                if (currentUser && currentUser.role === 'mentor' && app.status === 'aceito' && isPast) {
+                const isPastAndAccepted = new Date(`${app.date}T${app.time}`) < new Date() && app.status === 'aceito';
+            
+                if (isPastAndAccepted) {
                     actionArea = `<button class="btn btn-success btn-sm btn-mark-completed" data-id="${app.id}">Marcar como Realizado</button>`;
-                }
-
-                if (app.status === 'avaliado') {
+                } else if (app.status === 'avaliado') {
                     actionArea = `<span class="badge bg-light text-dark">Avaliado</span>`;
                 }
-
+            
                 pastAppointmentsList.innerHTML += `
                     <div class="list-group-item d-flex align-items-center gap-3">
                         <img src="${getAvatarUrl(mentee)}" class="rounded-circle" width="50" height="50" alt="Avatar">
