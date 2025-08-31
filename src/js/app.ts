@@ -16,7 +16,7 @@ interface User {
   email: string;
   password?: string;
   course: string;
-  role: 'mentee' | 'mentor' | 'admin';
+  role: 'mentee' | 'mentor' | 'admin' | 'professor';
   gender: 'masculino' | 'feminino' | 'outro';
   skills: string[];
   bio: string;
@@ -76,6 +76,23 @@ interface Content {
     createdAt: string;
 }
 
+interface ContentSchedule {
+  id: number;
+  mentorId: number;
+  title: string;
+  date: string;
+  createdAt: string;
+}
+
+interface Notification {
+  id: number;
+  userId: number;
+  text: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const authWrapper = document.getElementById('auth-wrapper') as HTMLElement;
     const appWrapper = document.getElementById('app-wrapper') as HTMLElement;
@@ -108,6 +125,8 @@ document.addEventListener('DOMContentLoaded', function () {
         agendamentos: document.getElementById('nav-agendamentos'),
         mensagens: document.getElementById('nav-mensagens'),
         forum: document.getElementById('nav-forum'),
+        notificacoes: document.getElementById('nav-notificacoes'),
+        conteudo: document.getElementById('nav-conteudo'),
         admin: document.getElementById('nav-admin'),
     };
     const editProfileBtn = document.getElementById('btn-edit-profile') as HTMLButtonElement;
@@ -129,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
     const mobileHeaderTitle = document.getElementById('mobile-header-title') as HTMLElement;
+    const scheduleContentForm = document.getElementById('form-schedule-content') as HTMLFormElement;
 
     const toastElement = document.getElementById('appToast') as HTMLElement;
     const appToast = new bootstrap.Toast(toastElement, { delay: 4000 });
@@ -143,6 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const editAppointmentModal = new bootstrap.Modal(document.getElementById('editAppointmentModal') as HTMLElement);
     const manageContentModal = new bootstrap.Modal(document.getElementById('manageContentModal') as HTMLElement);
     const viewContentModal = new bootstrap.Modal(document.getElementById('viewContentModal') as HTMLElement);
+    const scheduleContentModal = new bootstrap.Modal(document.getElementById('scheduleContentModal') as HTMLElement);
     const appConfirmModal = new bootstrap.Modal(document.getElementById('confirmModal') as HTMLElement);
     const appInfoModal = new bootstrap.Modal(document.getElementById('infoModal') as HTMLElement);
 
@@ -151,6 +172,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let messages: Message[] = JSON.parse(localStorage.getItem('mentoring_messages') || '[]');
     let forumTopics: ForumTopic[] = JSON.parse(localStorage.getItem('mentoring_forum_topics') || '[]');
     let contents: Content[] = JSON.parse(localStorage.getItem('mentoring_contents') || '[]');
+    let contentSchedules: ContentSchedule[] = JSON.parse(localStorage.getItem('mentoring_content_schedules') || '[]');
+    let notifications: Notification[] = JSON.parse(localStorage.getItem('mentoring_notifications') || '[]');
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
     let currentOpenTopicId: number | null = null;
@@ -164,8 +187,36 @@ document.addEventListener('DOMContentLoaded', function () {
     function saveMessages(): void { localStorage.setItem('mentoring_messages', JSON.stringify(messages)); }
     function saveForumTopics(): void { localStorage.setItem('mentoring_forum_topics', JSON.stringify(forumTopics)); }
     function saveContents(): void { localStorage.setItem('mentoring_contents', JSON.stringify(contents)); }
+    function saveContentSchedules(): void { localStorage.setItem('mentoring_content_schedules', JSON.stringify(contentSchedules)); }
+    function saveNotifications(): void { localStorage.setItem('mentoring_notifications', JSON.stringify(notifications)); }
     function setCurrentUser(user: User): void { currentUser = user; sessionStorage.setItem('mentoring_currentUser', JSON.stringify(user)); }
     function clearCurrentUser(): void { currentUser = null; sessionStorage.removeItem('mentoring_currentUser'); }
+
+    function createNotification(userId: number, text: string, link?: string): void {
+        const newNotification: Notification = {
+            id: Date.now(),
+            userId,
+            text,
+            link,
+            isRead: false,
+            createdAt: new Date().toISOString()
+        };
+        notifications.push(newNotification);
+        saveNotifications();
+        updateNotificationBadge();
+    }
+
+    function updateNotificationBadge(): void {
+        if (!currentUser) return;
+        const badge = document.getElementById('notification-badge') as HTMLElement;
+        const unreadCount = notifications.filter(n => n.userId === currentUser!.id && !n.isRead).length;
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount.toString();
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    }
 
     function showToast(message: string, type: 'success' | 'danger' | 'warning' | 'info' = 'info'): void {
         const toastBody = document.getElementById('toastBody') as HTMLElement;
@@ -348,6 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateDashboardUI(user: User): void {
         sidebarUsername.textContent = user.name;
         sidebarAvatar.src = getAvatarUrl(user);
+        updateNotificationBadge();
         
         Object.values(navItems).forEach(item => item?.classList.add('d-none'));
 
@@ -357,15 +409,18 @@ document.addEventListener('DOMContentLoaded', function () {
             navItems.agendamentos?.classList.remove('d-none');
             navItems.mensagens?.classList.remove('d-none');
             navItems.forum?.classList.remove('d-none');
+            navItems.notificacoes?.classList.remove('d-none');
             switchView('dashboard-section');
         } else if (user.role === 'mentor') {
             navItems.agendamentos?.classList.remove('d-none');
             navItems.mensagens?.classList.remove('d-none');
             navItems.forum?.classList.remove('d-none');
-            document.getElementById('nav-conteudo')?.classList.remove('d-none');
+            navItems.conteudo?.classList.remove('d-none');
+            navItems.notificacoes?.classList.remove('d-none');
             switchView('agendamento-section');
-        } else if (user.role === 'admin') {
+        } else if (user.role === 'admin' || user.role === 'professor') {
             navItems.admin?.classList.remove('d-none');
+            (navItems.admin!.querySelector('.nav-link') as HTMLElement).innerHTML = `<i class="bi bi-sliders"></i> Painel Geral`;
             switchView('admin-panel');
         }
     }
@@ -415,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
             email: String(userData.email),
             password: String(userData.password),
             course: String(userData.course),
-            role: userData.role as 'mentee' | 'mentor' | 'admin',
+            role: userData.role as 'mentee' | 'mentor' | 'admin' | 'professor',
             gender: userData.gender as 'masculino' | 'feminino' | 'outro',
             skills: [],
             bio: '',
@@ -451,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function () {
             email: String(userData.email), 
             password: String(userData.password), 
             course: String(userData.course), 
-            role: userData.role as 'mentee' | 'mentor', 
+            role: userData.role as 'mentee' | 'mentor' | 'professor', 
             gender: userData.gender as 'masculino' | 'feminino' | 'outro', 
             skills: userData.skills ? String(userData.skills).split(',').map(skill => skill.trim()).filter(Boolean) : [], 
             bio: '', 
@@ -602,8 +657,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function renderAdminDashboard(): void {
-        const manageableUsers = users.filter(u => u.role !== 'admin');
-        const adminUsers = users.filter(u => u.role === 'admin');
+        const manageableUsers = users.filter(u => u.role !== 'admin' && u.role !== 'professor');
+        const adminUsers = users.filter(u => u.role === 'admin' || u.role === 'professor');
         (document.getElementById('total-users-stat') as HTMLElement).textContent = manageableUsers.length.toString();
         (document.getElementById('total-mentors-stat') as HTMLElement).textContent = manageableUsers.filter(u => u.role === 'mentor').length.toString();
         (document.getElementById('total-mentees-stat') as HTMLElement).textContent = manageableUsers.filter(u => u.role === 'mentee').length.toString();
@@ -615,17 +670,20 @@ document.addEventListener('DOMContentLoaded', function () {
         userListUl.innerHTML = '';
         const usersToDisplay = users.filter(user => user.role !== 'admin');
         if (usersToDisplay.length === 0) {
-            userListUl.innerHTML = '<li class="list-group-item">Nenhum mentor ou mentee registrado.</li>';
+            userListUl.innerHTML = '<li class="list-group-item">Nenhum usuário gerenciável registrado.</li>';
             return;
         }
         usersToDisplay.forEach(user => {
-            const roleBadgeColor = user.role === 'mentor' ? 'bg-success' : 'bg-info';
+            let roleBadgeColor = 'bg-secondary';
+            if (user.role === 'mentor') roleBadgeColor = 'bg-success';
+            if (user.role === 'mentee') roleBadgeColor = 'bg-info';
+            if (user.role === 'professor') roleBadgeColor = 'bg-warning';
             userListUl.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center gap-3"><img src="${getAvatarUrl(user)}" class="rounded-circle" style="width: 40px; height: 40px; background-color: #f0f0f0;"><div><strong>${user.name}</strong><small class="d-block text-muted">${user.email}</small></div></div><div><span class="badge ${roleBadgeColor} me-3">${user.role}</span><button class="btn btn-sm btn-outline-danger btn-delete-user" data-id="${user.id}">Remover</button></div></li>`;
         });
     }
 
     function handleDeleteUser(userId: number): void {
-        if (!currentUser || currentUser.role !== 'admin') return;
+        if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'professor')) return;
         const userToDelete = users.find(user => user.id === userId);
         if (!userToDelete || userToDelete.role === 'admin') return;
         showConfirm(
@@ -722,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         if (!currentUser || currentUser.role !== 'mentee') return;
 
-        const WEEKLY_APPOINTMENT_LIMIT = 1;
+        const WEEKLY_APPOINTMENT_LIMIT = 7;
 
         function getWeekBounds(date: Date): { start: Date, end: Date } {
             const firstDay = new Date(date);
@@ -761,6 +819,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!mentorId || !date || !time || !topic) { 
             showToast("Preencha todos os campos.", 'warning'); 
             return; 
+        }
+        
+        const mentor = users.find(u => u.id === mentorId);
+        if(mentor) {
+            createNotification(mentorId, `Você recebeu uma nova solicitação de mentoria de ${currentUser.name}.`, 'agendamento-section');
         }
 
         appointments.push({ 
@@ -861,6 +924,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const body = (document.getElementById('message-body') as HTMLTextAreaElement).value;
         if (!recipientId || !body) { showToast('Mensagem não pode estar vazia.', 'warning'); return; }
         messages.push({ id: Date.now(), senderId: currentUser.id, receiverId: recipientId, subject: subject, body: body, timestamp: new Date().toISOString() });
+        createNotification(recipientId, `Você recebeu uma nova mensagem de ${currentUser.name}.`, 'mensagem-section');
         saveMessages();
         showToast('Mensagem enviada com sucesso!', 'success');
         composeMessageForm.reset();
@@ -894,7 +958,8 @@ document.addEventListener('DOMContentLoaded', function () {
             body: body,
             timestamp: new Date().toISOString()
         });
-
+        
+        createNotification(currentOpenConversationPartnerId, `Você recebeu uma nova resposta de ${currentUser.name}.`, 'mensagem-section');
         saveMessages();
         replyForm.reset();
         renderConversationThread(currentOpenConversationPartnerId);
@@ -984,6 +1049,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         appointment.status = 'avaliado';
         appointment.feedback = { rating, comment, date: new Date().toISOString() };
+        createNotification(appointment.mentorId, `${currentUser?.name} avaliou o encontro de vocês.`, 'agendamento-section');
         saveAppointments();
         showToast('Avaliação enviada com sucesso. Obrigado!', 'success');
         feedbackModal.hide();
@@ -1089,6 +1155,9 @@ document.addEventListener('DOMContentLoaded', function () {
             };
     
             topic.replies.push(newReply);
+            if(currentUser.id !== topic.authorId) {
+                createNotification(topic.authorId, `${currentUser.name} respondeu ao seu tópico '${topic.title}'.`, 'forum-section');
+            }
             saveForumTopics();
             
             replyTopicForm.reset();
@@ -1098,75 +1167,125 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function initCalendar(): void {
         if (!currentUser) return;
-        if (calendar) {
-            calendar.destroy();
+        if (calendar) calendar.destroy();
+        const isMobile = window.innerWidth < 768;
+        
+        let events: any[] = [];
+    
+        if (currentUser.role === 'mentee') {
+            const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id);
+            const appointmentEvents = myAppointments.map(app => {
+                const otherUser = users.find(u => u.id === app.mentorId);
+                const eventTitle = otherUser ? `Mentoria com ${otherUser.name}` : 'Mentoria';
+                let color = '#0d6efd';
+                if (app.status === 'pendente') color = '#ffc107';
+                if (app.status === 'aceito') color = '#198754';
+                if (['realizado', 'avaliado'].includes(app.status)) color = '#6c757d';
+                return { id: `app-${app.id}`, title: eventTitle, start: `${app.date}T${app.time}`, color, extendedProps: { type: 'appointment', ...app } };
+            });
+            const contentScheduleEvents = contentSchedules.map(schedule => {
+                const mentor = users.find(u => u.id === schedule.mentorId);
+                return { id: `cs-${schedule.id}`, title: `Conteúdo: ${schedule.title}`, start: schedule.date, allDay: true, color: '#fd7e14', extendedProps: { type: 'content-schedule', mentorName: mentor?.name || 'Desconhecido', ...schedule } };
+            });
+            events.push(...appointmentEvents, ...contentScheduleEvents);
+        } else if (currentUser.role === 'mentor') {
+            const myAppointments = appointments.filter(a => a.mentorId === currentUser!.id);
+            const myContentSchedules = contentSchedules.filter(cs => cs.mentorId === currentUser!.id);
+            const appointmentEvents = myAppointments.map(app => {
+                const otherUser = users.find(u => u.id === app.menteeId);
+                return { id: `app-${app.id}`, title: `Mentoria com ${otherUser?.name || 'Desconhecido'}`, start: `${app.date}T${app.time}`, color: '#198754', extendedProps: { type: 'appointment', ...app } };
+            });
+            const contentScheduleEvents = myContentSchedules.map(schedule => ({ id: `cs-${schedule.id}`, title: `Publicar: ${schedule.title}`, start: schedule.date, allDay: true, color: '#fd7e14', extendedProps: { type: 'content-schedule', ...schedule } }));
+            events.push(...appointmentEvents, ...contentScheduleEvents);
         }
 
-        const isMobile = window.innerWidth < 768;
-        const myAppointments = appointments.filter(a => a.menteeId === currentUser!.id || a.mentorId === currentUser!.id);
-        
-        const calendarEvents = myAppointments.map(app => {
-            const otherUserId = currentUser!.role === 'mentee' ? app.mentorId : app.menteeId;
-            const otherUser = users.find(u => u.id === otherUserId);
-
-            const eventTitle = otherUser 
-                ? `Mentoria com ${otherUser.name}` 
-                : 'Mentoria (Usuário Removido)';
-
-            let color = '#0d6efd';
-            if (app.status === 'pendente') color = '#ffc107';
-            if (app.status === 'aceito') color = '#198754';
-            if (app.status === 'realizado' || app.status === 'avaliado') color = '#6c757d';
-
-            return {
-                id: app.id.toString(),
-                title: eventTitle,
-                start: `${app.date}T${app.time}`,
-                color: color,
-                extendedProps: {
-                    topic: app.topic,
-                    status: app.status
-                }
-            };
-        });
-
         calendar = new Calendar(calendarContainer, {
-            plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
+            plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
             locale: 'pt-br',
             buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
             allDayText: 'Dia',
             headerToolbar: isMobile 
                 ? { left: 'prev,next', center: 'title', right: 'today' }
-                : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+                : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
             height: '100%',
             initialView: isMobile ? 'listWeek' : 'dayGridMonth',
-            events: calendarEvents,
+            events: events,
+            dateClick: (info) => {
+                if (currentUser?.role === 'mentor') {
+                    openScheduleContentModal(info.dateStr);
+                }
+            },
             eventClick: function (info: EventClickArg) {
-                const eventBody = `
-                    <p><strong>Com:</strong> ${info.event.title.replace('Mentoria com ', '')}</p>
-                    <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
-                    <p><strong>Tópico:</strong> ${info.event.extendedProps.topic}</p>
-                    <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${info.event.extendedProps.status}</span></p>
-                `;
-                showInfo('Detalhes do Encontro', eventBody);
+                const props = info.event.extendedProps;
+                let eventBody = '';
+                if(props.type === 'appointment') {
+                    const otherUser = users.find(u => u.id === (currentUser?.role === 'mentee' ? props.mentorId : props.menteeId));
+                    eventBody = `<p><strong>Com:</strong> ${otherUser?.name || 'Desconhecido'}</p>
+                                 <p><strong>Data:</strong> ${info.event.start?.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                                 <p><strong>Tópico:</strong> ${props.topic}</p>
+                                 <p><strong>Status:</strong> <span class="badge" style="background-color: ${info.event.backgroundColor}">${props.status}</span></p>`;
+                } else if (props.type === 'content-schedule') {
+                     eventBody = `<p><strong>Mentor:</strong> ${props.mentorName || 'Desconhecido'}</p>
+                                  <p><strong>Data de Publicação:</strong> ${info.event.start?.toLocaleDateString('pt-BR', { dateStyle: 'full' })}</p>
+                                  <p><strong>Material:</strong> ${info.event.title.replace('Conteúdo: ', '').replace('Publicar: ', '')}</p>`;
+                }
+                showInfo('Detalhes do Evento', eventBody);
             }
         });
         calendar.render();
     }
 
+    function openScheduleContentModal(dateStr: string): void {
+        scheduleContentForm.reset();
+        (document.getElementById('schedule-content-date') as HTMLInputElement).value = dateStr;
+        (document.getElementById('schedule-content-date-display') as HTMLInputElement).value = new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', { dateStyle: 'full', timeZone: 'UTC' });
+        scheduleContentModal.show();
+    }
+
+    function handleScheduleContentSubmit(e: SubmitEvent): void {
+        e.preventDefault();
+        if (!currentUser || currentUser.role !== 'mentor') return;
+        const title = (document.getElementById('schedule-content-title') as HTMLInputElement).value;
+        const date = (document.getElementById('schedule-content-date') as HTMLInputElement).value;
+        if(!title || !date) { showToast('Título é obrigatório.', 'warning'); return; }
+        const newSchedule: ContentSchedule = {
+            id: Date.now(),
+            mentorId: currentUser.id,
+            title, date,
+            createdAt: new Date().toISOString()
+        };
+        contentSchedules.push(newSchedule);
+        saveContentSchedules();
+        users.filter(u => u.role === 'mentee').forEach(mentee => {
+             createNotification(mentee.id, `O mentor ${currentUser!.name} agendou um novo material: '${title}'.`, 'agendamento-section');
+        });
+        showToast('Publicação de conteúdo agendada!', 'success');
+        scheduleContentModal.hide();
+        calendar?.refetchEvents();
+    }
+
     function renderAppointments(): void {
         if (!currentUser) return;
-        if (currentUser.role === 'mentee') {
-            initCalendar();
-        } else if (currentUser.role === 'mentor') {
+        if (['mentee', 'mentor'].includes(currentUser.role)) {
+            mentorAppointmentView.classList.add('d-none');
+            calendarContainer.classList.remove('d-none');
+            setTimeout(() => {
+                initCalendar();
+            }, 0);
+        }
+        if (currentUser.role === 'mentor') {
+            mentorAppointmentView.classList.remove('d-none');
+            calendarContainer.classList.add('d-none');
             renderMentorDashboard();
         }
     }
 
     function handleAcceptAppointment(appId: number): void {
         const appointment = appointments.find(app => app.id === appId);
-        if (appointment) {
+        const mentor = users.find(u => u.id === appointment?.mentorId);
+        if (appointment && mentor) {
             appointment.status = 'aceito';
+            createNotification(appointment.menteeId, `Seu mentor, ${mentor.name}, aceitou o agendamento sobre '${appointment.topic}'.`, 'agendamento-section');
             saveAppointments();
             renderMentorDashboard();
             showToast('Agendamento aceito com sucesso!', 'success');
@@ -1182,6 +1301,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 `Tem certeza que deseja recusar a mentoria com ${mentee ? mentee.name : 'este usuário'}?`,
                 () => {
                     appointment.status = 'recusado';
+                    createNotification(appointment.menteeId, `Seu mentor, ${currentUser?.name}, recusou o agendamento sobre '${appointment.topic}'.`, 'agendamento-section');
                     saveAppointments();
                     renderMentorDashboard();
                     showToast('Agendamento recusado.', 'info');
@@ -1224,6 +1344,11 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const selectedContentId = (document.getElementById('edit-appointment-content') as HTMLSelectElement).value;
         appointment.linkedContentId = selectedContentId ? parseInt(selectedContentId, 10) : undefined;
+        
+        const shouldNotify = (document.getElementById('edit-notify-mentee') as HTMLInputElement).checked;
+        if(shouldNotify) {
+            createNotification(appointment.menteeId, `Seu mentor, ${currentUser?.name}, alterou o agendamento sobre '${appointment.topic}'.`, 'agendamento-section');
+        }
     
         saveAppointments();
         renderMentorDashboard();
@@ -1236,6 +1361,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const appointment = appointments.find(app => app.id === appId);
         if (appointment && currentUser && currentUser.role === 'mentor') {
             appointment.status = 'realizado';
+            createNotification(appointment.menteeId, `O encontro sobre '${appointment.topic}' foi finalizado. Deixe sua avaliação!`, 'agendamento-section');
             saveAppointments();
             renderMentorDashboard();
             showToast('Encontro marcado como realizado! O mentee já pode avaliar.', 'success');
@@ -1353,20 +1479,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderMenteeDashboard(): void {
         if (!currentUser || currentUser.role !== 'mentee') return;
-
-        const ctaContainer = document.getElementById('dashboard-cta-container') as HTMLElement;
-        if (ctaContainer && (!currentUser.bio || currentUser.skills.length === 0)) {
-            ctaContainer.innerHTML = `
-                <div class="alert alert-primary" role="alert">
-                    <h5 class="alert-heading"><i class="bi bi-lightbulb me-2"></i>Dica!</h4>
-                    <p>Complete seu perfil para receber sugestões de mentores mais precisas. Conte-nos sobre suas dificuldades e interesses!</p>
-                    <hr>
-                    <button class="btn btn-primary fw-bold" onclick="document.getElementById('btn-edit-profile').click()">Editar meu perfil</button>
-                </div>
-            `;
-        } else if (ctaContainer) {
-            ctaContainer.innerHTML = '';
-        }
     
         const nextAppointmentContainer = document.getElementById('dashboard-next-appointment') as HTMLElement;
         const recentMentorsContainer = document.getElementById('dashboard-recent-mentors') as HTMLElement;
@@ -1423,28 +1535,47 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function renderNotifications(): void {
+        if (!currentUser) return;
+        const container = document.getElementById('notifications-list-container') as HTMLElement;
+        container.innerHTML = '';
+        const myNotifications = notifications
+            .filter(n => n.userId === currentUser!.id)
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+        if (myNotifications.length === 0) {
+            container.innerHTML = `<div class="text-center text-muted p-5"><i class="bi bi-bell-slash fs-1"></i><h5 class="mt-3">Nenhuma notificação</h5><p>Suas atualizações aparecerão aqui.</p></div>`;
+            return;
+        }
+    
+        myNotifications.forEach(n => {
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = `list-group-item list-group-item-action ${n.isRead ? '' : 'list-group-item-primary'}`;
+            item.dataset.notificationId = n.id.toString();
+            item.dataset.link = n.link;
+            item.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                    <p class="mb-1">${n.text}</p>
+                    <small>${new Date(n.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
     function switchView(targetViewId: string): void {
         if (!currentUser) return;
         document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
         const activeLink = document.querySelector(`.nav-link[data-view="${targetViewId}"]`);
         if (activeLink && mobileHeaderTitle) {
-         mobileHeaderTitle.textContent = activeLink.textContent || 'Mentoring';
+         mobileHeaderTitle.textContent = activeLink.textContent?.replace(/\d/g, '').trim() || 'Mentoring';
         }
         if (activeLink) activeLink.classList.add('active');
         views.forEach(view => view.classList.toggle('d-none', view.id !== targetViewId));
         
         if (targetViewId === 'agendamento-section') {
-            if (currentUser.role === 'mentee') {
-                mentorAppointmentView.classList.add('d-none');
-                calendarContainer.classList.remove('d-none');
-                setTimeout(() => {
-                    renderAppointments();
-                }, 0);
-            } else if (currentUser.role === 'mentor') {
-                mentorAppointmentView.classList.remove('d-none');
-                calendarContainer.classList.add('d-none');
-                renderMentorDashboard();
-            }
+            renderAppointments();
         } else if (targetViewId === 'admin-panel') {
             renderAdminDashboard();
         } else if (targetViewId === 'mensagem-section') {
@@ -1457,6 +1588,8 @@ document.addEventListener('DOMContentLoaded', function () {
             renderMenteeDashboard();
         } else if (targetViewId === 'content-management-section') {
             renderContentManagement();
+        } else if (targetViewId === 'notificacoes-section') {
+            renderNotifications();
         }
     }
 
@@ -1618,6 +1751,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     editProfileForm.addEventListener('submit', handleProfileUpdate);
     editAppointmentForm.addEventListener('submit', handleEditAppointment);
+    scheduleContentForm.addEventListener('submit', handleScheduleContentSubmit);
 
     addUserBtn.addEventListener('click', () => addUserModal.show());
     addUserForm.addEventListener('submit', handleAdminAddUser);
@@ -1811,6 +1945,35 @@ document.addEventListener('DOMContentLoaded', function () {
     
         const deleteBtn = target.closest('.btn-delete-content');
         if (deleteBtn) handleDeleteContent(parseInt(deleteBtn.getAttribute('data-id')!, 10));
+    });
+
+    document.getElementById('notifications-list-container')?.addEventListener('click', e => {
+        e.preventDefault();
+        const target = e.target as HTMLElement;
+        const item = target.closest('.list-group-item-action') as HTMLElement;
+        if (!item) return;
+
+        const notifId = parseInt(item.dataset.notificationId!);
+        const notif = notifications.find(n => n.id === notifId);
+        if (notif) {
+            notif.isRead = true;
+            saveNotifications();
+            if (notif.link) {
+                switchView(notif.link);
+            }
+            renderNotifications();
+            updateNotificationBadge();
+        }
+    });
+
+    document.getElementById('btn-mark-all-read')?.addEventListener('click', () => {
+        if(!currentUser) return;
+        notifications.forEach(n => {
+            if(n.userId === currentUser!.id) n.isRead = true;
+        });
+        saveNotifications();
+        renderNotifications();
+        updateNotificationBadge();
     });
 
     init();

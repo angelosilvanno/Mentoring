@@ -50,6 +50,7 @@
               <option disabled selected value="">Tipo de Conta</option>
               <option value="mentee">Mentee</option>
               <option value="mentor">Mentor</option>
+              <option value="professor">Professor(a)</option>
               <option value="admin" id="admin-register-option">Administrador(a)</option></select>
             </div>
             <div class="col-6"><select class="form-select" name="gender" required>
@@ -99,6 +100,7 @@
               <i class="bi bi-chat-left-text"></i> Mensagens</a></li>
             <li class="nav-item" id="nav-forum"><a href="#" class="nav-link" data-view="forum-section">
               <i class="bi bi-people"></i> Fórum</a></li>
+            <li class="nav-item" id="nav-notificacoes"><a href="#" class="nav-link" data-view="notificacoes-section"><i class="bi bi-bell"></i> Notificações <span id="notification-badge" class="badge bg-danger ms-2 d-none"></span></a></li>
             <li class="nav-item d-none" id="nav-conteudo"><a href="#" class="nav-link" data-view="content-management-section">
               <i class="bi bi-book"></i> Conteúdos</a></li>
             <li class="nav-item d-none" id="nav-admin"><a href="#" class="nav-link" data-view="admin-panel">
@@ -283,6 +285,19 @@
                     <div class="card-body" id="content-list-container">
                     </div>
                 </div>
+              </section>
+
+              <section id="notificacoes-section" class="content-view col-12 d-none">
+                  <div class="card h-100">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                          <h2 class="fs-5 mb-0">Minhas Notificações</h2>
+                          <button class="btn btn-sm btn-outline-secondary" id="btn-mark-all-read">Marcar todas como lidas</button>
+                      </div>
+                      <div class="card-body p-0">
+                          <div id="notifications-list-container" class="list-group list-group-flush">
+                          </div>
+                      </div>
+                  </div>
               </section>
 
               <section id="admin-panel" class="content-view col-12 d-none">
@@ -542,6 +557,34 @@ Quartas: 14h - 16h"></textarea></div>
               </div>
           </div>
       </div>
+  </div>
+
+  <div class="modal fade" id="scheduleContentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="scheduleContentModalLabel">Agendar Publicação de Conteúdo</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="form-schedule-content">
+            <input type="hidden" id="schedule-content-date">
+            <div class="mb-3">
+                <label class="form-label">Agendando para a data:</label>
+                <input type="text" id="schedule-content-date-display" class="form-control" disabled>
+            </div>
+            <div class="mb-3">
+              <label for="schedule-content-title" class="form-label">Título do Material</label>
+              <input type="text" id="schedule-content-title" class="form-control" placeholder="Ex: Dicas para a Prova de Cálculo I" required>
+            </div>
+            <div class="modal-footer px-0 pb-0">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Agendar Publicação</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
