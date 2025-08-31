@@ -1419,7 +1419,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     actionButtons = `
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge rounded-pill bg-success">aceito</span>
-                            <button class="btn btn-outline-secondary btn-sm btn-edit-appointment" data-id="${app.id}">Editar</button>
+                            <button class="btn btn-outline-secondary btn-sm btn-edit-appointment" data-id="${app.id}">editar</button>
+                            <button class="btn btn-outline-danger btn-sm btn-decline-appointment" data-id="${app.id}">excluir</button>
                         </div>
                     `;
                 }
