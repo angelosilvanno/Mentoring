@@ -418,7 +418,12 @@ document.addEventListener('DOMContentLoaded', function () {
             navItems.conteudo?.classList.remove('d-none');
             navItems.notificacoes?.classList.remove('d-none');
             switchView('agendamento-section');
-        } else if (user.role === 'admin' || user.role === 'professor') {
+        } else if (user.role === 'professor') {
+            navItems.admin?.classList.remove('d-none');
+            navItems.conteudo?.classList.remove('d-none');
+            (navItems.admin!.querySelector('.nav-link') as HTMLElement).innerHTML = `<i class="bi bi-people-fill"></i> Gerenciar Alunos`;
+            switchView('admin-panel');
+        } else if (user.role === 'admin') {
             navItems.admin?.classList.remove('d-none');
             (navItems.admin!.querySelector('.nav-link') as HTMLElement).innerHTML = `<i class="bi bi-sliders"></i> Painel Geral`;
             switchView('admin-panel');
@@ -657,6 +662,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function renderAdminDashboard(): void {
+        if (!currentUser) return;
+        const addUserBtn = document.getElementById('btn-add-user') as HTMLButtonElement;
+        addUserBtn.style.display = currentUser.role === 'admin' ? 'block' : 'none';
         const manageableUsers = users.filter(u => u.role !== 'admin' && u.role !== 'professor');
         const adminUsers = users.filter(u => u.role === 'admin' || u.role === 'professor');
         (document.getElementById('total-users-stat') as HTMLElement).textContent = manageableUsers.length.toString();
@@ -1594,7 +1602,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderContentManagement(): void {
-        if (!currentUser || currentUser.role !== 'mentor') return;
+        if (!currentUser || (currentUser.role !== 'mentor' && currentUser.role !== 'professor')) return;
         const container = document.getElementById('content-list-container') as HTMLElement;
         container.innerHTML = '';
         const myContents = contents.filter(c => c.authorId === currentUser!.id);
@@ -1642,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     function handleManageContentSubmit(e: SubmitEvent): void {
         e.preventDefault();
-        if (!currentUser || currentUser.role !== 'mentor') return;
+        if (!currentUser || (currentUser.role !== 'mentor' && currentUser.role !== 'professor')) return;
     
         const title = (document.getElementById('content-title') as HTMLInputElement).value;
         const description = (document.getElementById('content-description') as HTMLTextAreaElement).value;
