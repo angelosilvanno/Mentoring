@@ -1202,11 +1202,11 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar = new Calendar(calendarContainer, {
             plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
             locale: 'pt-br',
-            buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia', list: 'lista' },
+            buttonText: { today: 'hoje', month: 'mês', week: 'semana', day: 'dia' },
             allDayText: 'Dia',
             headerToolbar: isMobile 
                 ? { left: 'prev,next', center: 'title', right: 'today' }
-                : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+                : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
             height: '100%',
             initialView: isMobile ? 'listWeek' : 'dayGridMonth',
             events: events,
@@ -1553,7 +1553,7 @@ document.addEventListener('DOMContentLoaded', function () {
             item.href = '#';
             item.className = `list-group-item list-group-item-action ${n.isRead ? '' : 'list-group-item-primary'}`;
             item.dataset.notificationId = n.id.toString();
-            item.dataset.link = n.link;
+            if (n.link) item.dataset.link = n.link;
             item.innerHTML = `
                 <div class="d-flex w-100 justify-content-between">
                     <p class="mb-1">${n.text}</p>
