@@ -69,3 +69,7 @@ Siga os passos abaixo para ter um ambiente de desenvolvimento em execução.
 5.  **Acesse a aplicação:**
     *   Após executar o comando acima, o terminal irá indicar o endereço local onde a aplicação está rodando.
     *   Abra seu navegador e acesse `http://localhost:5173` (ou a porta indicada no seu terminal).
+
+  ## 👷 Autor
+
+* **Ângelo Silvano** - *Front-End Developer* - [@angelosilvanno](https://github.com/angelosilvanno)
