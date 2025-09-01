@@ -91,3 +91,7 @@ Para executar este projeto localmente, você precisará ter o Node.js e o NPM in
 ## 👷 Autor
 
 *   **Ângelo Silvano** - *Desenvolvedor Front-End* - [@angelosilvanno](https://github.com/angelosilvanno)
+  
+## 📄 Licença
+
+* Esse projeto está sob a licença MIT - acesse os detalhes em [LICENSE.md](https://github.com/angelosilvanno/Mentoring?tab=MIT-1-ov-file).
