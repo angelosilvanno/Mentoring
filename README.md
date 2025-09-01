@@ -4,45 +4,63 @@ Este repositório contém o código-fonte do projeto **Mentoring**, um protótip
 
 ## 🔥 Introdução
 
-A plataforma **Mentoring** foi concebida para enfrentar os desafios de evasão e dificuldades de aprendizado enfrentados por alunos ingressantes em cursos de Tecnologia da Informação. O principal objetivo é criar um ecossistema de apoio que conecta alunos novatos (mentorados) a alunos veteranos ou professores (mentores), facilitando a troca de conhecimento, experiências e oferecendo suporte acadêmico e pessoal.
+A plataforma **Mentoring** foi concebida para enfrentar os desafios de evasão e dificuldades de aprendizado enfrentados por alunos ingressantes em cursos de Tecnologia da Informação. O principal objetivo é criar um ecossistema de apoio que conecta alunos novatos (mentees) a alunos veteranos (mentores), além de envolver professores e administradores, para facilitar a troca de conhecimento, experiências e oferecer suporte acadêmico e pessoal.
 
-### ✨ Funcionalidades Principais
+## ✨ Funcionalidades Principais
 
-*   **👤 Gestão de Contas:** Sistema completo de autenticação com cadastro, login e recuperação de senha.
-*   **🎭 Perfis de Usuário:** Três níveis de acesso distintos: Mentor, Mentorado (Mentee) e Administrador, cada um com sua própria interface e permissões.
-*   **🔍 Descoberta de Mentores:** Uma página dedicada para que os mentorados encontrem mentores, com filtros por recomendação, destaque (melhores avaliados) e busca por nome ou habilidade.
-*   **📅 Sistema de Agendamento:**
-    *   Mentorados podem solicitar encontros através do perfil do mentor.
-    *   Mentores gerenciam as solicitações em um painel, podendo aceitar, recusar ou editar encontros.
-    *   Visualização em calendário (para mentorados) e em lista (para mentores).
-*   **💬 Ferramentas de Comunicação:**
-    *   **Mensagens Diretas:** Um sistema de chat para comunicação privada entre mentor e mentorado.
-    *   **Fórum Comunitário:** Um espaço para criar tópicos de discussão, tirar dúvidas e compartilhar conhecimento com toda a comunidade da plataforma.
-*   **⭐ Sistema de Avaliação:** Mentorados podem avaliar os encontros finalizados com uma nota (de 1 a 5 estrelas) e um comentário, gerando um feedback valioso.
-*   **⚙️ Painel de Administração:** Uma área restrita para administradores com estatísticas de uso da plataforma e ferramentas para gerenciar todos os usuários cadastrados.
+A plataforma possui um sistema de controle de acesso com quatro papéis de usuário distintos, cada um com sua própria interface e permissões:
 
-## 📦 Tecnologias usadas:
+### 👤 Mentee (Aluno Ingressante)
+
+-   **Dashboard Inicial:** Visão geral com próximo encontro, mentores recentes e sugestões de mentores do mesmo curso.
+-   **Busca de Mentores:** Sistema de descoberta com abas para mentores "Recomendados", em "Destaque" (melhores avaliados) e "Buscar Todos" com filtros por nome ou habilidade.
+-   **Agendamento de Encontros:** Sistema para solicitar horários de mentoria, com limite de agendamentos semanais.
+-   **Calendário Unificado:** Visualização centralizada tanto de seus agendamentos de mentoria quanto das publicações de conteúdo planejadas pelos mentores.
+-   **Comunicação:** Acesso a um sistema de mensagens diretas e ao Fórum da Comunidade para criar e responder tópicos.
+-   **Sistema de Notificações:** Central que exibe alertas para todas as atividades relevantes (agendamentos, novas mensagens, avaliações, etc.).
+-   **Avaliação de Mentorias:** Funcionalidade para avaliar encontros com notas (estrelas) e comentários.
+
+### 🎓 Mentor (Aluno Veterano)
+
+-   **Dashboard de Agendamentos:** Painel com estatísticas (encontros realizados, mentees atendidos) e gestão de encontros.
+-   **Gestão de Solicitações:** Funcionalidade para **Aceitar**, **Recusar**, **Editar** ou **Excluir** solicitações de mentoria.
+-   **Gestão de Conteúdo:** Área para **criar, editar e excluir** materiais de apoio (com título, descrição e links de recursos).
+-   **Calendário Interativo:** Permite agendar a publicação de novos conteúdos em datas futuras, tornando o planejamento visível para os mentees.
+-   **Acesso completo ao Fórum e Mensagens.**
+-   **Sistema de Notificações** para novas solicitações, mensagens e avaliações recebidas.
+
+### 👨‍🏫 Professor
+
+-   **Painel Administrativo:** Visão geral da comunidade com estatísticas e ferramentas de gestão.
+-   **Gerenciamento de Alunos:** Acesso à lista completa de usuários (mentores e mentees) com permissão para **remover** contas.
+-   **Gestão de Conteúdo:** Acesso completo à área de **criação, edição e exclusão** de materiais de apoio, atuando como o principal curador do conteúdo pedagógico da plataforma.
+
+### ⚙️ Administrador
+
+-   **Controle Total da Plataforma:** Acesso a todas as funcionalidades administrativas.
+-   **Gerenciamento Completo de Usuários:** Permissão para **adicionar** e **remover** qualquer tipo de usuário da plataforma.
+-   **Visualização de Estatísticas** completas sobre a comunidade.
+
+## 📦 Tecnologias Utilizadas
 
 Este projeto foi construído com ferramentas modernas do ecossistema front-end, focando em boas práticas, tipagem forte e uma interface de usuário responsiva.
 
-*   💻 **Front-End:**
-    *   **HTML5**
-    *   **CSS3** (com Variáveis CSS para um design coeso)
-    *   **TypeScript** (para adicionar tipagem estática e segurança ao JavaScript)
-    *   **Bootstrap 5** (para a estrutura de layout, componentes de UI e sistema de grid)
-    *   **Bootstrap Icons** (para a iconografia da interface)
-    *   **FullCalendar.js** (para a criação da visualização de agendamentos em calendário)
+-   **💻 Front-End:**
+    -   HTML5
+    -   CSS3
+    -   TypeScript
+    -   Bootstrap 5 (para layout e componentes de UI)
+    -   Bootstrap Icons (para a iconografia)
+    -   FullCalendar.js (para a criação dos calendários interativos)
 
-*   🔧 **Ferramentas de Desenvolvimento:**
-    *   **Vite** (como ferramenta de build e servidor de desenvolvimento local)
-    *   **Node.js / NPM** (para gerenciamento de dependências)
-    *   **API DiceBear** (para a geração dinâmica de avatares de usuário)
+-   **🔧 Ferramentas e Serviços:**
+    -   Vite (servidor de desenvolvimento e build tool)
+    -   Node.js / NPM (gerenciamento de dependências)
+    -   DiceBear API (para a geração dinâmica de avatares de usuário)
 
-## 🔨 Guia de instalação
+## 🔨 Guia de Instalação
 
-Para executar este projeto localmente, você precisará ter o Node.js e o NPM (ou Yarn) instalados em sua máquina.
-
-Siga os passos abaixo para ter um ambiente de desenvolvimento em execução.
+Para executar este projeto localmente, você precisará ter o Node.js e o NPM instalados em sua máquina.
 
 **Etapas para instalar:**
 
@@ -67,9 +85,9 @@ Siga os passos abaixo para ter um ambiente de desenvolvimento em execução.
     ```
 
 5.  **Acesse a aplicação:**
-    *   Após executar o comando acima, o terminal irá indicar o endereço local onde a aplicação está rodando.
-    *   Abra seu navegador e acesse `http://localhost:5173` (ou a porta indicada no seu terminal).
+    -   Após executar o comando acima, o terminal irá indicar o endereço local onde a aplicação está rodando.
+    -   Abra seu navegador e acesse `http://localhost:5173` (ou a porta indicada no seu terminal).
 
-  ## 👷 Autor
+## 👷 Autor
 
-* **Ângelo Silvano** - *Front-End Developer* - [@angelosilvanno](https://github.com/angelosilvanno)
+*   **Ângelo Silvano** - *Desenvolvedor Front-End* - [@angelosilvanno](https://github.com/angelosilvanno)
