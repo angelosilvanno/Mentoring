@@ -356,27 +356,34 @@ Quartas: 14h - 16h"></textarea></div>
   <button type="submit" class="btn btn-primary">Salvar Alterações</button></div></form></div></div></div></div>
   <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header">
-    <h1 class="modal-title fs-5">Adicionar Novo Usuário</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-add-user" class="row g-3">
-    <div class="col-12"><input type="text" name="fullName" class="form-control" placeholder="Nome Completo" required /></div><div class="col-12"><input type="email" name="email" class="form-control" placeholder="E-mail" required /></div>
-    <div class="col-12"><input type="password" name="password" class="form-control" placeholder="Senha Temporária" required /></div><div class="col-md-6"><select class="form-select" name="course" required>
-      <option disabled selected value="">Curso </option>
-      <option value="BTI">BTI</option><option value="ES">Eng. Software</option>
+    <h1 class="modal-title fs-5">Adicionar Novo Usuário</h1>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div><div class="modal-body"><form id="form-add-user" class="row g-3">
+    <div class="col-12">
+      <input type="text" name="fullName" class="form-control" placeholder="Nome Completo" required /></div>
+      <div class="col-12"><input type="email" name="email" class="form-control" placeholder="E-mail" required /></div>
+    <div class="col-12"><input type="password" name="password" class="form-control" placeholder="Senha" required /></div>
+    <div class="col-md-6"><select class="form-select" name="course" required>
+      <option disabled selected value="">Curso</option>
+      <option value="BTI">BTI</option>
+      <option value="ES">Eng. Software</option>
       <option value="Outro">Outro</option></select></div><div class="col-md-6">
       <select class="form-select" name="role" required>
-        <option disabled selected value="">-- Papel --</option>
+        <option disabled selected value="">Papel</option>
         <option value="mentor">Aluno(a) Veterano(a)</option>
         <option value="mentee">Aluno(a) Novato(a)</option>
       </select>
     </div>
     <div class="col-md-12">
-      <select class="form-select" name="gender" required><option disabled selected value="">-- Gênero --</option>
+      <select class="form-select" name="gender" required>
+        <option disabled selected value="">Gênero</option>
         <option value="masculino">Masculino</option>
         <option value="feminino">Feminino</option>
         <option value="outro">Outro</option>
       </select>
     </div>
     <div class="col-12">
-      <input type="text" name="skills" class="form-control" placeholder="Habilidades (separadas por vírgula)" />
+      <input type="text" name="skills" class="form-control" placeholder="Habilidades" />
     </div>
     <div class="col-12 d-flex justify-content-end">
       <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
@@ -385,7 +392,10 @@ Quartas: 14h - 16h"></textarea></div>
   <div class="modal fade" id="viewProfileModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-0"><h1 class="modal-title fs-5">Mentor</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header border-0">
+              <h1 class="modal-title fs-5">Mentor</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body text-center">
                 <img id="modal-profile-avatar" src="" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover; background-color: #f0f0f0;" alt="Avatar do Mentor">
                 <h2 id="modal-profile-name" class="fs-4"></h2>
@@ -406,7 +416,22 @@ Quartas: 14h - 16h"></textarea></div>
     </div>
   </div>
 
-  <div class="modal fade" id="composeMessageModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="composeMessageModalLabel">Enviar Nova Mensagem</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-compose-message"><input type="hidden" id="message-recipient-id"><div class="mb-3"><label for="message-recipient-name" class="form-label">Para:</label><input type="text" id="message-recipient-name" class="form-control" disabled></div><div class="mb-3"><label for="message-subject" class="form-label">Assunto:</label><input type="text" id="message-subject" class="form-control" required></div><div class="mb-3"><label for="message-body" class="form-label">Mensagem:</label><textarea id="message-body" class="form-control" rows="5" required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Enviar</button></div></form></div></div></div></div>
+  <div class="modal fade" id="composeMessageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h1 class="modal-title fs-5" id="composeMessageModalLabel">Enviar Nova Mensagem</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-compose-message"><input type="hidden" id="message-recipient-id"><div class="mb-3">
+        <label for="message-recipient-name" class="form-label">Para:</label>
+        <input type="text" id="message-recipient-name" class="form-control" disabled></div>
+        <div class="mb-3"><label for="message-subject" class="form-label">Assunto:</label>
+          <input type="text" id="message-subject" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="message-body" class="form-label">Mensagem:</label>
+          <textarea id="message-body" class="form-control" rows="5" required></textarea>
+        </div>
+        <div class="modal-footer px-0 pb-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div></form></div></div></div></div>
   <div class="modal fade" id="viewConversationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="viewConversationModalLabel">Conversa com...</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="conversation-thread-body" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><form id="form-reply-message" class="w-100"><div class="input-group"><textarea id="reply-message-body" class="form-control" placeholder="Escreva sua resposta..." rows="2" required></textarea><button type="submit" class="btn btn-primary">Responder</button></div></form></div></div></div></div>
   <div class="modal fade" id="requestMentorshipModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="requestMentorshipModalLabel">Solicitar Encontro</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-request-mentorship"><input type="hidden" id="mentorship-mentor-id"><div class="mb-3"><label for="mentorship-date" class="form-label">Data do Encontro</label><input type="date" id="mentorship-date" class="form-control" required></div><div class="mb-3"><label for="mentorship-time" class="form-label">Horário</label><input type="time" id="mentorship-time" class="form-control" required></div><div class="mb-3"><label for="mentorship-topic" class="form-label">Tópico Principal</label><textarea id="mentorship-topic" class="form-control" rows="3" placeholder="Sobre o que você gostaria de conversar? (ex: Ajuda com Cálculo I, Dicas de Carreira)" required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Enviar Solicitação</button></div></form></div></div></div></div>
   <div class="modal fade" id="feedbackModal" tabindex="-1">
