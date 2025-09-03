@@ -410,6 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
             navItems.mensagens?.classList.remove('d-none');
             navItems.forum?.classList.remove('d-none');
             navItems.notificacoes?.classList.remove('d-none');
+            navItems.conteudo?.classList.remove('d-none');
             switchView('dashboard-section');
         } else if (user.role === 'mentor') {
             navItems.agendamentos?.classList.remove('d-none');
@@ -1601,19 +1602,43 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderContentManagement(): void {
-        if (!currentUser || (currentUser.role !== 'mentor' && currentUser.role !== 'professor')) return;
+        if (!currentUser) return;
+        
         const container = document.getElementById('content-list-container') as HTMLElement;
+        const createBtn = document.getElementById('btn-create-content') as HTMLButtonElement;
+        
+        const canManage = ['mentor', 'professor'].includes(currentUser.role);
+        createBtn.style.display = canManage ? 'block' : 'none';
+        
         container.innerHTML = '';
-        const myContents = contents.filter(c => c.authorId === currentUser!.id);
-    
-        if (myContents.length === 0) {
-            container.innerHTML = '<div class="text-center p-5 text-muted"><i class="bi bi-journal-bookmark fs-1"></i><h5 class="mt-3">Nenhum conteúdo criado</h5><p>Crie materiais de apoio reutilizáveis para suas mentorias.</p></div>';
+        
+        const contentsToDisplay = canManage 
+            ? contents.filter(c => c.authorId === currentUser!.id) 
+            : contents;
+
+        if (contentsToDisplay.length === 0) {
+            container.innerHTML = `<div class="text-center p-5 text-muted"><i class="bi bi-journal-bookmark fs-1"></i><h5 class="mt-3">Nenhum conteúdo disponível</h5><p>${canManage ? 'Crie o primeiro material de apoio.' : 'Materiais de mentores e professores aparecerão aqui.'}</p></div>`;
             return;
         }
     
         const contentList = document.createElement('div');
         contentList.className = 'list-group';
-        myContents.forEach(content => {
+        contentsToDisplay.forEach(content => {
+            const author = users.find(u => u.id === content.authorId);
+            const authorHtml = author ? `<small class="text-muted">Por: ${author.name}</small>` : '';
+
+            const actionButtons = canManage ? `
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-primary btn-view-content" data-id="${content.id}">Visualizar</button>
+                    <button class="btn btn-sm btn-outline-secondary btn-edit-content" data-id="${content.id}">Editar</button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete-content" data-id="${content.id}">Excluir</button>
+                </div>
+            ` : `
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-primary btn-view-content" data-id="${content.id}">Visualizar Material</button>
+                </div>
+            `;
+
             contentList.innerHTML += `
                 <div class="list-group-item">
                     <div class="d-flex w-100 justify-content-between">
@@ -1621,11 +1646,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <small>Criado em ${new Date(content.createdAt).toLocaleDateString()}</small>
                     </div>
                     <p class="mb-1">${content.description}</p>
-                    <div class="mt-2">
-                        <button class="btn btn-sm btn-outline-primary btn-view-content" data-id="${content.id}">Visualizar</button>
-                        <button class="btn btn-sm btn-outline-secondary btn-edit-content" data-id="${content.id}">Editar</button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete-content" data-id="${content.id}">Excluir</button>
-                    </div>
+                    ${authorHtml}
+                    ${actionButtons}
                 </div>
             `;
         });
@@ -1633,6 +1655,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function openManageContentModal(contentId: number | null = null): void {
+        if(!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
         const form = document.getElementById('form-manage-content') as HTMLFormElement;
         form.reset();
         contentToEditId = contentId;
@@ -1649,7 +1672,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     function handleManageContentSubmit(e: SubmitEvent): void {
         e.preventDefault();
-        if (!currentUser || (currentUser.role !== 'mentor' && currentUser.role !== 'professor')) return;
+        if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
     
         const title = (document.getElementById('content-title') as HTMLInputElement).value;
         const description = (document.getElementById('content-description') as HTMLTextAreaElement).value;
@@ -1684,6 +1707,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function handleDeleteContent(contentId: number): void {
+        if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
         showConfirm('Excluir Conteúdo', 'Tem certeza que deseja excluir este material? Esta ação não pode ser desfeita.', () => {
             contents = contents.filter(c => c.id !== contentId);
             saveContents();
