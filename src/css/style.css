@@ -478,3 +478,15 @@ a:hover {
   flex-grow: 1;
   min-height: 350px; 
 }
+
+#content-management-section, 
+#content-management-section > .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#content-management-section .card-body {
+  flex-grow: 1; 
+  overflow-y: auto;
+}
