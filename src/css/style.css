@@ -479,14 +479,50 @@ a:hover {
   min-height: 350px; 
 }
 
-#content-management-section, 
-#content-management-section > .card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+#content-list-container .list-group {
+  border: none;
 }
 
-#content-management-section .card-body {
-  flex-grow: 1; 
-  overflow-y: auto;
+#content-list-container .list-group-item {
+  border: 1px solid var(--border-color); 
+  border-radius: 12px;                  
+  margin-bottom: 1.25rem;               
+  padding: 1.5rem;                      
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); 
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#content-list-container .list-group-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+#content-list-container .list-group-item h5 {
+  font-weight: 600; 
+  color: var(--primary-text-color);
+  font-size: 1.1rem; 
+}
+
+#content-list-container .list-group-item p {
+  color: var(--secondary-text-color); 
+  font-size: 0.95rem;
+}
+
+#content-list-container .btn {
+  font-weight: 500;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+  display: inline-flex; 
+  align-items: center;
+  gap: 0.4rem;        
+}
+
+#content-list-container .btn-view-content {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+#content-list-container .btn-view-content:hover {
+  background-color: var(--primary-hover-color);
+  border-color: var(--primary-hover-color);
 }
