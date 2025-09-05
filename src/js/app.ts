@@ -1295,41 +1295,46 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function renderMyCalendar(): void {
-        if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
-        
-        if (myCalendar) myCalendar.destroy();
+     if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
+
+     const calendarEl = document.getElementById('meu-calendario-container') as HTMLElement;
+     if (!calendarEl) return;
     
-        const myContentSchedules = contentSchedules.filter(cs => cs.mentorId === currentUser!.id);
-        const contentEvents = myContentSchedules.map(schedule => ({
-            id: `cs-${schedule.id}`,
-            title: `Publicar: ${schedule.title}`,
-            start: schedule.date,
-            allDay: true,
-            color: '#fd7e14',
-            extendedProps: { type: 'content-schedule', ...schedule }
-        }));
-        
-        myCalendar = new Calendar(myCalendarContainer, {
-            plugins: [dayGridPlugin, interactionPlugin],
-            locale: 'pt-br',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth'
-            },
-            events: contentEvents,
-            dateClick: (info) => {
-                openScheduleContentModal(info.dateStr);
-            },
-            eventClick: (info) => {
-                const props = info.event.extendedProps;
-                const eventBody = `<p><strong>Ação:</strong> Publicar Conteúdo</p>
-                                 <p><strong>Data de Publicação:</strong> ${info.event.start?.toLocaleDateString('pt-BR', { dateStyle: 'full' })}</p>
-                                 <p><strong>Material:</strong> ${info.event.title.replace('Publicar: ', '')}</p>`;
-                showInfo('Detalhes do Planejamento', eventBody);
-            }
-        });
-        myCalendar.render();
+     if (myCalendar) myCalendar.destroy();
+
+     const myContentSchedules = contentSchedules.filter(cs => cs.mentorId === currentUser!.id);
+     const contentEvents = myContentSchedules.map(schedule => ({
+        id: `cs-${schedule.id}`,
+        title: `Publicar: ${schedule.title}`,
+        start: schedule.date,
+        allDay: true,
+        color: '#fd7e14',
+        extendedProps: { type: 'content-schedule', ...schedule }
+    }));
+    
+    myCalendar = new Calendar(calendarEl, {
+        plugins: [dayGridPlugin, interactionPlugin],
+        locale: 'pt-br',
+        buttonText: { today: 'hoje', month: 'mês' }, 
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth'
+        },
+        height: '100%', 
+        events: contentEvents,
+        dateClick: (info) => {
+            openScheduleContentModal(info.dateStr);
+        },
+        eventClick: (info) => {
+            const props = info.event.extendedProps;
+            const eventBody = `<p><strong>Ação:</strong> Publicar Conteúdo</p>
+                             <p><strong>Data de Publicação:</strong> ${info.event.start?.toLocaleDateString('pt-BR', { dateStyle: 'full' })}</p>
+                             <p><strong>Material:</strong> ${info.event.title.replace('Publicar: ', '')}</p>`;
+            showInfo('Detalhes do Planejamento', eventBody);
+        }
+    });
+     myCalendar.render();
     }
 
     function handleAcceptAppointment(appId: number): void {
