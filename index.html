@@ -96,6 +96,8 @@
               <i class="bi bi-search"></i> Buscar Mentores</a></li>
             <li class="nav-item" id="nav-agendamentos"><a href="#" class="nav-link" data-view="agendamento-section">
               <i class="bi bi-calendar-check"></i> Agendamentos</a></li>
+            <li class="nav-item d-none" id="nav-meu-calendario"><a href="#" class="nav-link" data-view="meu-calendario-section">
+              <i class="bi bi-calendar-plus"></i> Meu Calendário</a></li>
             <li class="nav-item" id="nav-mensagens"><a href="#" class="nav-link" data-view="mensagem-section">
               <i class="bi bi-chat-left-text"></i> Mensagens</a></li>
             <li class="nav-item" id="nav-forum"><a href="#" class="nav-link" data-view="forum-section">
@@ -266,6 +268,21 @@
                     </div>
                 </div>
               </section>
+              
+              <section id="meu-calendario-section" class="content-view col-12 d-none">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h2 class="fs-5 mb-0">Meu Calendário de Planejamento</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-primary" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Use este calendário para planejar a publicação de seus conteúdos. Clique em uma data para agendar um novo material.
+                        </div>
+                        <div id="meu-calendario-container" style="height: 400px;"></div>
+                    </div>
+                </div>
+              </section>
     
               <section id="mensagem-section" class="content-view col-12 d-none">
                 <div class="card h-100"><div class="card-header"><h2 class="fs-5 mb-0">Minhas Mensagens</h2></div><div class="card-body p-0" id="conversations-container"><ul class="list-group list-group-flush" id="conversations-list-ul"><li class="list-group-item text-muted text-center p-4">Nenhuma conversa iniciada.</li></ul></div></div></section>
@@ -277,7 +294,7 @@
               <section id="content-management-section" class="content-view col-12 d-none">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2 class="fs-5 mb-0">Gestão de Conteúdo</h2>
+                        <h2 class="fs-5 mb-0">Conteúdos</h2>
                         <button class="btn btn-primary btn-sm" id="btn-create-content">
                             <i class="bi bi-plus-circle"></i> Criar Novo Conteúdo
                         </button>
@@ -433,7 +450,7 @@ Quartas: 14h - 16h"></textarea></div>
           <button type="submit" class="btn btn-primary">Enviar</button>
         </div></form></div></div></div></div>
   <div class="modal fade" id="viewConversationModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="viewConversationModalLabel">Conversa com...</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="conversation-thread-body" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><form id="form-reply-message" class="w-100"><div class="input-group"><textarea id="reply-message-body" class="form-control" placeholder="Escreva sua resposta..." rows="2" required></textarea><button type="submit" class="btn btn-primary">Responder</button></div></form></div></div></div></div>
-  <div class="modal fade" id="requestMentorshipModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="requestMentorshipModalLabel">Solicitar Encontro</h1><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-request-mentorship"><input type="hidden" id="mentorship-mentor-id"><div class="mb-3"><label for="mentorship-date" class="form-label">Data do Encontro</label><input type="date" id="mentorship-date" class="form-control" required></div><div class="mb-3"><label for="mentorship-time" class="form-label">Horário</label><input type="time" id="mentorship-time" class="form-control" required></div><div class="mb-3"><label for="mentorship-topic" class="form-label">Tópico Principal</label><textarea id="mentorship-topic" class="form-control" rows="3" placeholder="Sobre o que você gostaria de conversar? (ex: Ajuda com Cálculo I, Dicas de Carreira)" required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Enviar Solicitação</button></div></form></div></div></div></div>
+  <div class="modal fade" id="requestMentorshipModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="requestMentorshipModalLabel">Solicitar Encontro</h1><button type="button" class="btn btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-request-mentorship"><input type="hidden" id="mentorship-mentor-id"><div class="mb-3"><label for="mentorship-date" class="form-label">Data do Encontro</label><input type="date" id="mentorship-date" class="form-control" required></div><div class="mb-3"><label for="mentorship-time" class="form-label">Horário</label><input type="time" id="mentorship-time" class="form-control" required></div><div class="mb-3"><label for="mentorship-topic" class="form-label">Tópico Principal</label><textarea id="mentorship-topic" class="form-control" rows="3" placeholder="Sobre o que você gostaria de conversar? (ex: Ajuda com Cálculo I, Dicas de Carreira)" required></textarea></div><div class="modal-footer px-0 pb-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Enviar Solicitação</button></div></form></div></div></div></div>
   <div class="modal fade" id="feedbackModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
       <div class="modal-header">

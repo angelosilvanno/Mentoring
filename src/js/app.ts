@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dashboard: document.getElementById('nav-dashboard'),
         buscar: document.getElementById('nav-buscar-mentores'),
         agendamentos: document.getElementById('nav-agendamentos'),
+        meuCalendario: document.getElementById('nav-meu-calendario'),
         mensagens: document.getElementById('nav-mensagens'),
         forum: document.getElementById('nav-forum'),
         notificacoes: document.getElementById('nav-notificacoes'),
@@ -146,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const editAppointmentForm = document.getElementById('form-edit-appointment') as HTMLFormElement;
     const popularTagsContainer = document.getElementById('popular-tags-container') as HTMLElement;
     const calendarContainer = document.getElementById('calendar-container') as HTMLElement;
+    const myCalendarContainer = document.getElementById('meu-calendario-container') as HTMLElement;
     const mentorAppointmentView = document.getElementById('mentor-appointment-view') as HTMLElement;
     const mobileHeaderTitle = document.getElementById('mobile-header-title') as HTMLElement;
     const scheduleContentForm = document.getElementById('form-schedule-content') as HTMLFormElement;
@@ -176,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let notifications: Notification[] = JSON.parse(localStorage.getItem('mentoring_notifications') || '[]');
     let currentUser: User | null = JSON.parse(sessionStorage.getItem('mentoring_currentUser') || 'null');
     let calendar: Calendar | null = null;
+    let myCalendar: Calendar | null = null;
     let currentOpenTopicId: number | null = null;
     let userToResetPasswordId: number | null = null;
     let appointmentToEditId: number | null = null;
@@ -414,6 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
             switchView('dashboard-section');
         } else if (user.role === 'mentor') {
             navItems.agendamentos?.classList.remove('d-none');
+            navItems.meuCalendario?.classList.remove('d-none');
             navItems.mensagens?.classList.remove('d-none');
             navItems.forum?.classList.remove('d-none');
             navItems.conteudo?.classList.remove('d-none');
@@ -422,6 +426,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (user.role === 'professor') {
             navItems.admin?.classList.remove('d-none');
             navItems.conteudo?.classList.remove('d-none');
+            navItems.meuCalendario?.classList.remove('d-none');
             (navItems.admin!.querySelector('.nav-link') as HTMLElement).innerHTML = `<i class="bi bi-people-fill"></i> Gerenciar Alunos`;
             switchView('admin-panel');
         } else if (user.role === 'admin') {
@@ -1253,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function handleScheduleContentSubmit(e: SubmitEvent): void {
         e.preventDefault();
-        if (!currentUser || currentUser.role !== 'mentor') return;
+        if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
         const title = (document.getElementById('schedule-content-title') as HTMLInputElement).value;
         const date = (document.getElementById('schedule-content-date') as HTMLInputElement).value;
         if(!title || !date) { showToast('Título é obrigatório.', 'warning'); return; }
@@ -1266,27 +1271,65 @@ document.addEventListener('DOMContentLoaded', function () {
         contentSchedules.push(newSchedule);
         saveContentSchedules();
         users.filter(u => u.role === 'mentee').forEach(mentee => {
-             createNotification(mentee.id, `O mentor ${currentUser!.name} agendou um novo material: '${title}'.`, 'agendamento-section');
+             createNotification(mentee.id, `O ${currentUser!.role} ${currentUser!.name} agendou um novo material: '${title}'.`, 'agendamento-section');
         });
         showToast('Publicação de conteúdo agendada!', 'success');
         scheduleContentModal.hide();
-        calendar?.refetchEvents();
+        myCalendar?.refetchEvents();
     }
 
     function renderAppointments(): void {
         if (!currentUser) return;
-        if (['mentee', 'mentor'].includes(currentUser.role)) {
-            mentorAppointmentView.classList.add('d-none');
+
+        if (currentUser.role === 'mentee') {
+            mentorAppointmentView.style.display = 'none';
             calendarContainer.classList.remove('d-none');
             setTimeout(() => {
                 initCalendar();
             }, 0);
-        }
-        if (currentUser.role === 'mentor') {
-            mentorAppointmentView.classList.remove('d-none');
+        } else if (currentUser.role === 'mentor') {
+            mentorAppointmentView.style.display = 'block';
             calendarContainer.classList.add('d-none');
             renderMentorDashboard();
         }
+    }
+    
+    function renderMyCalendar(): void {
+        if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
+        
+        if (myCalendar) myCalendar.destroy();
+    
+        const myContentSchedules = contentSchedules.filter(cs => cs.mentorId === currentUser!.id);
+        const contentEvents = myContentSchedules.map(schedule => ({
+            id: `cs-${schedule.id}`,
+            title: `Publicar: ${schedule.title}`,
+            start: schedule.date,
+            allDay: true,
+            color: '#fd7e14',
+            extendedProps: { type: 'content-schedule', ...schedule }
+        }));
+        
+        myCalendar = new Calendar(myCalendarContainer, {
+            plugins: [dayGridPlugin, interactionPlugin],
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth'
+            },
+            events: contentEvents,
+            dateClick: (info) => {
+                openScheduleContentModal(info.dateStr);
+            },
+            eventClick: (info) => {
+                const props = info.event.extendedProps;
+                const eventBody = `<p><strong>Ação:</strong> Publicar Conteúdo</p>
+                                 <p><strong>Data de Publicação:</strong> ${info.event.start?.toLocaleDateString('pt-BR', { dateStyle: 'full' })}</p>
+                                 <p><strong>Material:</strong> ${info.event.title.replace('Publicar: ', '')}</p>`;
+                showInfo('Detalhes do Planejamento', eventBody);
+            }
+        });
+        myCalendar.render();
     }
 
     function handleAcceptAppointment(appId: number): void {
@@ -1306,14 +1349,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (appointment) {
             const mentee = users.find(u => u.id === appointment.menteeId);
             showConfirm(
-                'Recusar Agendamento',
-                `Tem certeza que deseja recusar a mentoria com ${mentee ? mentee.name : 'este usuário'}?`,
+                'Recusar/Excluir Agendamento',
+                `Tem certeza que deseja recusar ou excluir a mentoria com ${mentee ? mentee.name : 'este usuário'}?`,
                 () => {
                     appointment.status = 'recusado';
-                    createNotification(appointment.menteeId, `Seu mentor, ${currentUser?.name}, recusou o agendamento sobre '${appointment.topic}'.`, 'agendamento-section');
+                    createNotification(appointment.menteeId, `Seu mentor, ${currentUser?.name}, recusou/cancelou o agendamento sobre '${appointment.topic}'.`, 'agendamento-section');
                     saveAppointments();
                     renderMentorDashboard();
-                    showToast('Agendamento recusado.', 'info');
+                    showToast('Agendamento recusado/excluído.', 'info');
                 }
             );
         }
@@ -1321,7 +1364,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openEditAppointmentModal(appId: number): void {
         const appointment = appointments.find(app => app.id === appId);
-        if (!appointment || !currentUser || currentUser.role !== 'mentor') return;
+        if (!appointment || !currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
     
         appointmentToEditId = appId;
         (document.getElementById('edit-appointment-date') as HTMLInputElement).value = appointment.date;
@@ -1584,6 +1627,8 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (targetViewId === 'agendamento-section') {
             renderAppointments();
+        } else if (targetViewId === 'meu-calendario-section') {
+            renderMyCalendar();
         } else if (targetViewId === 'admin-panel') {
             renderAdminDashboard();
         } else if (targetViewId === 'mensagem-section') {
@@ -2008,4 +2053,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     init();
-});
+})
