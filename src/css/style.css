@@ -474,8 +474,7 @@ a:hover {
     gap: 0.5rem;
 }
 
-/* Faz o container do calendário de planejamento crescer para preencher o espaço vertical */
 #meu-calendario-container {
   flex-grow: 1;
-  min-height: 350px; /* Garante uma altura mínima para não ficar espremido */
+  min-height: 350px; 
 }
