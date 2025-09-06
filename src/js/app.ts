@@ -1259,20 +1259,35 @@ document.addEventListener('DOMContentLoaded', function () {
     function handleScheduleContentSubmit(e: SubmitEvent): void {
         e.preventDefault();
         if (!currentUser || !['mentor', 'professor'].includes(currentUser.role)) return;
+
         const title = (document.getElementById('schedule-content-title') as HTMLInputElement).value;
         const date = (document.getElementById('schedule-content-date') as HTMLInputElement).value;
-        if(!title || !date) { showToast('Título é obrigatório.', 'warning'); return; }
+        if (!title || !date) {
+            showToast('Título é obrigatório.', 'warning');
+            return;
+        }
+
+        const publicationDate = new Date(date + 'T00:00:00');
+        const formattedDate = publicationDate.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: 'short',
+            timeZone: 'UTC'
+        });
+
         const newSchedule: ContentSchedule = {
             id: Date.now(),
             mentorId: currentUser.id,
-            title, date,
+            title,
+            date,
             createdAt: new Date().toISOString()
         };
         contentSchedules.push(newSchedule);
         saveContentSchedules();
+
         users.filter(u => u.role === 'mentee').forEach(mentee => {
-             createNotification(mentee.id, `O ${currentUser!.role} ${currentUser!.name} agendou um novo material: '${title}'.`, 'agendamento-section');
+            createNotification(mentee.id, `O ${currentUser!.role} ${currentUser!.name} agendou um novo material para ${formattedDate}: '${title}'.`, 'agendamento-section');
         });
+
         showToast('Publicação de conteúdo agendada!', 'success');
         scheduleContentModal.hide();
         myCalendar?.refetchEvents();
