@@ -472,8 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (users.some(user => user.email === userData.email)) {
             showToast('Este e-mail já está em uso.', 'danger');
             return;
-        }
-        
+        } 
         const newUser: User = {
             id: Date.now(),
             username: String(userData.username),
