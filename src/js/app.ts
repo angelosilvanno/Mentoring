@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const mentorsListContainer = document.getElementById('mentors-list-container') as HTMLElement;
     const searchMentorInput = document.getElementById('search-mentor-input') as HTMLInputElement;
     const userListUl = document.getElementById('users-list-ul') as HTMLUListElement;
+    const slogan = document.querySelector('#auth-wrapper .text-muted');
     const navItems: { [key: string]: HTMLElement | null } = {
         dashboard: document.getElementById('nav-dashboard'),
         buscar: document.getElementById('nav-buscar-mentores'),
@@ -720,6 +721,7 @@ document.addEventListener('DOMContentLoaded', function () {
         forgotPasswordSection.classList.add('d-none');
         resetPasswordSection.classList.add('d-none');
         loginContainer.classList.remove('d-none');
+        if (slogan) slogan.classList.remove('d-none');
     }
 
     function showRegisterFormView(): void {
@@ -727,6 +729,7 @@ document.addEventListener('DOMContentLoaded', function () {
         forgotPasswordSection.classList.add('d-none');
         resetPasswordSection.classList.add('d-none');
         registerSection.classList.remove('d-none');
+        if (slogan) slogan.classList.add('d-none'); 
     }
 
     function showForgotPasswordView(): void {
