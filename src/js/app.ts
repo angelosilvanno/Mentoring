@@ -680,38 +680,61 @@ document.addEventListener('DOMContentLoaded', function () {
         renderUserListForAdmin();
     }
 
+
     function renderUserListForAdmin(): void {
-        userListUl.innerHTML = '';
-        const usersToDisplay = users.filter(user => user.role !== 'admin');
-        if (usersToDisplay.length === 0) {
-            userListUl.innerHTML = '<li class="list-group-item">Nenhum usuário gerenciável registrado.</li>';
-            return;
-        }
+     userListUl.innerHTML = '';
+     const usersToDisplay = users.filter(user => user.role !== 'admin');
+     if (usersToDisplay.length === 0) {
+          userListUl.innerHTML = '<li class="list-group-item">Nenhum usuário gerenciável registrado.</li>';
+          return;
+        }  
         usersToDisplay.forEach(user => {
-            let roleBadgeColor = 'bg-secondary';
-            if (user.role === 'mentor') roleBadgeColor = 'bg-success';
-            if (user.role === 'mentee') roleBadgeColor = 'bg-info';
-            if (user.role === 'professor') roleBadgeColor = 'bg-warning';
-            userListUl.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center gap-3"><img src="${getAvatarUrl(user)}" class="rounded-circle" style="width: 40px; height: 40px; background-color: #f0f0f0;"><div><strong>${user.name}</strong><small class="d-block text-muted">${user.email}</small></div></div><div><span class="badge ${roleBadgeColor} me-3">${user.role}</span><button class="btn btn-sm btn-outline-danger btn-delete-user" data-id="${user.id}">Remover</button></div></li>`;
-        });
-    }
+           let roleBadgeColor = 'bg-secondary';
+           if (user.role === 'mentor') roleBadgeColor = 'bg-success';
+           if (user.role === 'mentee') roleBadgeColor = 'bg-info';
+           if (user.role === 'professor') roleBadgeColor = 'bg-warning';
+
+
+        const removeButtonHtml = currentUser && currentUser.role === 'admin'
+            ? `<button class="btn btn-sm btn-outline-danger btn-delete-user" data-id="${user.id}">Remover</button>`
+            : ''; // Se não for admin, o botão fica em branco.
+
+        userListUl.innerHTML += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="${getAvatarUrl(user)}" class="rounded-circle" style="width: 40px; height: 40px; background-color: #f0f0f0;">
+                    <div>
+                        <strong>${user.name}</strong>
+                        <small class="d-block text-muted">${user.email}</small>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge ${roleBadgeColor} me-3">${user.role}</span>
+                    ${removeButtonHtml}
+                </div>
+            </li>`;
+       });
+   }
+
+   
 
     function handleDeleteUser(userId: number): void {
-        if (!currentUser || currentUser.role !== 'admin') return;
+        if (!currentUser || currentUser.role !== 'admin') return; 
         const userToDelete = users.find(user => user.id === userId);
         if (!userToDelete || userToDelete.role === 'admin') return; 
+
         showConfirm(
-            'Excluir Usuário',
-            `Tem certeza que deseja remover ${userToDelete.name}? Esta ação não pode ser desfeita.`,
-            () => {
-                users = users.filter(user => user.id !== userId);
-                appointments = appointments.filter(a => a.mentorId !== userId && a.menteeId !== userId);
-                messages = messages.filter(m => m.senderId !== userId && m.receiverId !== userId);
-                saveUsers();
-                saveAppointments();
-                saveMessages();
-                renderAdminDashboard();
-                showToast(`Usuário ${userToDelete.name} removido com sucesso.`, 'success');
+         'Excluir Usuário',
+         `Tem certeza que deseja remover ${userToDelete.name}? Esta ação não pode ser desfeita.`,
+           () => {
+              users = users.filter(user => user.id !== userId);
+              appointments = appointments.filter(a => a.mentorId !== userId && a.menteeId !== userId);
+              messages = messages.filter(m => m.senderId !== userId && m.receiverId !== userId);
+              saveUsers();
+              saveAppointments();
+              saveMessages();
+              renderAdminDashboard();
+              showToast(`Usuário ${userToDelete.name} removido com sucesso.`, 'success');
             }
         );
     }
