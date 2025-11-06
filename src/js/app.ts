@@ -697,9 +697,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleDeleteUser(userId: number): void {
-        if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'professor')) return;
+        if (!currentUser || currentUser.role !== 'admin') return;
         const userToDelete = users.find(user => user.id === userId);
-        if (!userToDelete || userToDelete.role === 'admin') return;
+        if (!userToDelete || userToDelete.role === 'admin') return; 
         showConfirm(
             'Excluir Usuário',
             `Tem certeza que deseja remover ${userToDelete.name}? Esta ação não pode ser desfeita.`,
